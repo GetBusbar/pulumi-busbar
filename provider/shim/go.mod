@@ -6,10 +6,8 @@ module github.com/GetBusbar/terraform-provider-busbar/shim
 
 go 1.26
 
-replace github.com/GetBusbar/terraform-provider-busbar => ../../../../terraform-provider-busbar
-
 require (
-	github.com/GetBusbar/terraform-provider-busbar v0.0.0-00010101000000-000000000000
+	github.com/GetBusbar/terraform-provider-busbar v0.1.0
 	github.com/hashicorp/terraform-plugin-framework v1.19.0
 )
 

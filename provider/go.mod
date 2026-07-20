@@ -6,7 +6,6 @@ go 1.26
 // local re-export shim, so we can bridge them without first publishing either
 // as a Go module. The shim's import path descends from the upstream module
 // root, which lets it re-export the upstream internal/provider factory.
-replace github.com/GetBusbar/terraform-provider-busbar => ../../../terraform-provider-busbar
 
 replace github.com/GetBusbar/terraform-provider-busbar/shim => ./shim
 
@@ -25,7 +24,7 @@ require (
 	cloud.google.com/go/monitoring v1.24.3 // indirect
 	cloud.google.com/go/storage v1.61.3 // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
-	github.com/GetBusbar/terraform-provider-busbar v0.0.0-00010101000000-000000000000 // indirect
+	github.com/GetBusbar/terraform-provider-busbar v0.1.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.32.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.55.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.55.0 // indirect
