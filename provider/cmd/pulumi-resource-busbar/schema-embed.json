@@ -1,0 +1,651 @@
+{
+    "name": "busbar",
+    "displayName": "Busbar",
+    "description": "A Pulumi package for creating and managing Busbar LLM gateway resources through its admin API.",
+    "keywords": [
+        "pulumi",
+        "busbar",
+        "llm",
+        "gateway",
+        "ai",
+        "category/utility"
+    ],
+    "homepage": "https://getbusbar.com",
+    "license": "Apache-2.0",
+    "attribution": "This Pulumi package is based on the [`busbar` Terraform Provider](https://github.com/GetBusbar/terraform-provider-busbar).",
+    "repository": "https://github.com/getbusbar/pulumi-busbar",
+    "publisher": "GetBusbar",
+    "meta": {
+        "moduleFormat": "(.*)(?:/[^/]*)"
+    },
+    "language": {
+        "go": {
+            "importBasePath": "github.com/getbusbar/pulumi-busbar/sdk/go/busbar",
+            "generateResourceContainerTypes": true,
+            "generateExtraInputTypes": true
+        },
+        "nodejs": {
+            "packageName": "@getbusbar/pulumi-busbar",
+            "packageDescription": "A Pulumi package for creating and managing Busbar LLM gateway resources through its admin API.",
+            "readme": "\u003e This provider is a derived work of the [Terraform Provider](https://github.com/GetBusbar/terraform-provider-busbar)\n\u003e distributed under [MPL 2.0](https://www.mozilla.org/en-US/MPL/2.0/). If you encounter a bug or missing feature,\n\u003e first check the [`pulumi-busbar` repo](https://github.com/getbusbar/pulumi-busbar/issues); however, if that doesn't turn up anything,\n\u003e please consult the source [`terraform-provider-busbar` repo](https://github.com/GetBusbar/terraform-provider-busbar/issues).",
+            "dependencies": {
+                "@pulumi/pulumi": "^3.0.0"
+            },
+            "devDependencies": {
+                "@types/node": "^18"
+            },
+            "compatibility": "tfbridge20",
+            "disableUnionOutputTypes": true
+        },
+        "python": {
+            "packageName": "pulumi_busbar",
+            "requires": {
+                "pulumi": "\u003e=3.0.0,\u003c4.0.0"
+            },
+            "readme": "\u003e This provider is a derived work of the [Terraform Provider](https://github.com/GetBusbar/terraform-provider-busbar)\n\u003e distributed under [MPL 2.0](https://www.mozilla.org/en-US/MPL/2.0/). If you encounter a bug or missing feature,\n\u003e first check the [`pulumi-busbar` repo](https://github.com/getbusbar/pulumi-busbar/issues); however, if that doesn't turn up anything,\n\u003e please consult the source [`terraform-provider-busbar` repo](https://github.com/GetBusbar/terraform-provider-busbar/issues).",
+            "compatibility": "tfbridge20",
+            "pyproject": {}
+        }
+    },
+    "config": {
+        "variables": {
+            "caCertPem": {
+                "type": "string",
+                "description": "PEM-encoded CA certificate to trust the admin server's certificate (e.g. a private CA)."
+            },
+            "clientCertPem": {
+                "type": "string",
+                "description": "PEM-encoded client certificate for mTLS against a cert-gated admin plane."
+            },
+            "clientKeyPem": {
+                "type": "string",
+                "description": "PEM-encoded private key for client_cert_pem.",
+                "secret": true
+            },
+            "endpoint": {
+                "type": "string",
+                "description": "Admin listener URL, e.g. https://busbar-admin.internal:8081. May also be set with the BUSBAR_ENDPOINT environment variable.",
+                "defaultInfo": {
+                    "environment": [
+                        "BUSBAR_ENDPOINT"
+                    ]
+                }
+            },
+            "insecure": {
+                "type": "boolean",
+                "description": "Skip TLS certificate verification. Development only; never use against production."
+            },
+            "token": {
+                "type": "string",
+                "description": "Operator admin token, sent as the x-admin-token header. May also be set with the BUSBAR_ADMIN_TOKEN environment variable.",
+                "defaultInfo": {
+                    "environment": [
+                        "BUSBAR_ADMIN_TOKEN"
+                    ]
+                },
+                "secret": true
+            }
+        }
+    },
+    "provider": {
+        "description": "The provider type for the busbar package. By default, resources use package-wide configuration\nsettings, however an explicit `Provider` instance may be created and passed during resource\nconstruction to achieve fine-grained programmatic control over provider settings. See the\n[documentation](https://www.pulumi.com/docs/reference/programming-model/#providers) for more information.\n",
+        "properties": {
+            "caCertPem": {
+                "type": "string",
+                "description": "PEM-encoded CA certificate to trust the admin server's certificate (e.g. a private CA)."
+            },
+            "clientCertPem": {
+                "type": "string",
+                "description": "PEM-encoded client certificate for mTLS against a cert-gated admin plane."
+            },
+            "clientKeyPem": {
+                "type": "string",
+                "description": "PEM-encoded private key for client_cert_pem.",
+                "secret": true
+            },
+            "endpoint": {
+                "type": "string",
+                "description": "Admin listener URL, e.g. https://busbar-admin.internal:8081. May also be set with the BUSBAR_ENDPOINT environment variable."
+            },
+            "insecure": {
+                "type": "boolean",
+                "description": "Skip TLS certificate verification. Development only; never use against production."
+            },
+            "token": {
+                "type": "string",
+                "description": "Operator admin token, sent as the x-admin-token header. May also be set with the BUSBAR_ADMIN_TOKEN environment variable.",
+                "secret": true
+            }
+        },
+        "inputProperties": {
+            "caCertPem": {
+                "type": "string",
+                "description": "PEM-encoded CA certificate to trust the admin server's certificate (e.g. a private CA)."
+            },
+            "clientCertPem": {
+                "type": "string",
+                "description": "PEM-encoded client certificate for mTLS against a cert-gated admin plane."
+            },
+            "clientKeyPem": {
+                "type": "string",
+                "description": "PEM-encoded private key for client_cert_pem.",
+                "secret": true
+            },
+            "endpoint": {
+                "type": "string",
+                "description": "Admin listener URL, e.g. https://busbar-admin.internal:8081. May also be set with the BUSBAR_ENDPOINT environment variable.",
+                "defaultInfo": {
+                    "environment": [
+                        "BUSBAR_ENDPOINT"
+                    ]
+                }
+            },
+            "insecure": {
+                "type": "boolean",
+                "description": "Skip TLS certificate verification. Development only; never use against production."
+            },
+            "token": {
+                "type": "string",
+                "description": "Operator admin token, sent as the x-admin-token header. May also be set with the BUSBAR_ADMIN_TOKEN environment variable.",
+                "defaultInfo": {
+                    "environment": [
+                        "BUSBAR_ADMIN_TOKEN"
+                    ]
+                },
+                "secret": true
+            }
+        },
+        "methods": {
+            "terraformConfig": "pulumi:providers:busbar/terraformConfig"
+        }
+    },
+    "resources": {
+        "busbar:index/config:Config": {
+            "properties": {
+                "configVersion": {
+                    "type": "integer",
+                    "description": "The monotonic config version after the last apply. Process-local; resets to 0 on gateway restart."
+                },
+                "document": {
+                    "type": "string",
+                    "description": "The full config apply document as a JSON string: {\"config\": {DeployCfg}, \"providers\": {name: ProviderDef}}. The \u003cspan pulumi-lang-nodejs=\"`config`\" pulumi-lang-dotnet=\"`Config`\" pulumi-lang-go=\"`config`\" pulumi-lang-python=\"`config`\" pulumi-lang-yaml=\"`config`\" pulumi-lang-java=\"`config`\" pulumi-lang-hcl=\"`config`\"\u003e`config`\u003c/span\u003e key is required; \u003cspan pulumi-lang-nodejs=\"`providers`\" pulumi-lang-dotnet=\"`Providers`\" pulumi-lang-go=\"`providers`\" pulumi-lang-python=\"`providers`\" pulumi-lang-yaml=\"`providers`\" pulumi-lang-java=\"`providers`\" pulumi-lang-hcl=\"`providers`\"\u003e`providers`\u003c/span\u003e is optional. This is the write model (the boot-file shape), NOT the redacted read projection returned by GET /config."
+                }
+            },
+            "required": [
+                "configVersion",
+                "document"
+            ],
+            "inputProperties": {
+                "document": {
+                    "type": "string",
+                    "description": "The full config apply document as a JSON string: {\"config\": {DeployCfg}, \"providers\": {name: ProviderDef}}. The \u003cspan pulumi-lang-nodejs=\"`config`\" pulumi-lang-dotnet=\"`Config`\" pulumi-lang-go=\"`config`\" pulumi-lang-python=\"`config`\" pulumi-lang-yaml=\"`config`\" pulumi-lang-java=\"`config`\" pulumi-lang-hcl=\"`config`\"\u003e`config`\u003c/span\u003e key is required; \u003cspan pulumi-lang-nodejs=\"`providers`\" pulumi-lang-dotnet=\"`Providers`\" pulumi-lang-go=\"`providers`\" pulumi-lang-python=\"`providers`\" pulumi-lang-yaml=\"`providers`\" pulumi-lang-java=\"`providers`\" pulumi-lang-hcl=\"`providers`\"\u003e`providers`\u003c/span\u003e is optional. This is the write model (the boot-file shape), NOT the redacted read projection returned by GET /config."
+                }
+            },
+            "requiredInputs": [
+                "document"
+            ],
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering Config resources.\n",
+                "properties": {
+                    "configVersion": {
+                        "type": "integer",
+                        "description": "The monotonic config version after the last apply. Process-local; resets to 0 on gateway restart."
+                    },
+                    "document": {
+                        "type": "string",
+                        "description": "The full config apply document as a JSON string: {\"config\": {DeployCfg}, \"providers\": {name: ProviderDef}}. The \u003cspan pulumi-lang-nodejs=\"`config`\" pulumi-lang-dotnet=\"`Config`\" pulumi-lang-go=\"`config`\" pulumi-lang-python=\"`config`\" pulumi-lang-yaml=\"`config`\" pulumi-lang-java=\"`config`\" pulumi-lang-hcl=\"`config`\"\u003e`config`\u003c/span\u003e key is required; \u003cspan pulumi-lang-nodejs=\"`providers`\" pulumi-lang-dotnet=\"`Providers`\" pulumi-lang-go=\"`providers`\" pulumi-lang-python=\"`providers`\" pulumi-lang-yaml=\"`providers`\" pulumi-lang-java=\"`providers`\" pulumi-lang-hcl=\"`providers`\"\u003e`providers`\u003c/span\u003e is optional. This is the write model (the boot-file shape), NOT the redacted read projection returned by GET /config."
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "busbar:index/hook:Hook": {
+            "properties": {
+                "at": {
+                    "type": "string",
+                    "description": "Pipeline stage: request, route, attempt, or completion. Null lets busbar place it by kind."
+                },
+                "default": {
+                    "type": "boolean",
+                    "description": "Whether this hook is the default for its stage. Write-only (not echoed by reads)."
+                },
+                "global": {
+                    "type": "boolean",
+                    "description": "Whether the hook applies globally (all pools). Defaults to false. May read back true if wired via global_hooks."
+                },
+                "kind": {
+                    "type": "string",
+                    "description": "Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook."
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Unique hook name (\u003c= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook."
+                },
+                "onEmpty": {
+                    "type": "string",
+                    "description": "Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads)."
+                },
+                "onError": {
+                    "type": "string",
+                    "description": "Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing."
+                },
+                "priority": {
+                    "type": "integer",
+                    "description": "Ordering priority within a stage. Defaults to 0."
+                },
+                "prompt": {
+                    "type": "string",
+                    "description": "Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)"
+                },
+                "settings": {
+                    "type": "string",
+                    "description": "Opaque per-hook settings as a JSON object string (\u003c= 64KiB, \u003c= 256 keys). Defaults to {}."
+                },
+                "socket": {
+                    "type": "string",
+                    "description": "Unix socket path to the hook process. Exactly one of socket or webhook."
+                },
+                "timeoutMs": {
+                    "type": "integer",
+                    "description": "Per-call timeout in milliseconds. Defaults to 1."
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook."
+                },
+                "webhook": {
+                    "type": "string",
+                    "description": "Webhook URL for the hook. Exactly one of socket or webhook."
+                }
+            },
+            "required": [
+                "global",
+                "kind",
+                "name",
+                "onError",
+                "priority",
+                "prompt",
+                "settings",
+                "timeoutMs",
+                "user"
+            ],
+            "inputProperties": {
+                "at": {
+                    "type": "string",
+                    "description": "Pipeline stage: request, route, attempt, or completion. Null lets busbar place it by kind."
+                },
+                "default": {
+                    "type": "boolean",
+                    "description": "Whether this hook is the default for its stage. Write-only (not echoed by reads)."
+                },
+                "global": {
+                    "type": "boolean",
+                    "description": "Whether the hook applies globally (all pools). Defaults to false. May read back true if wired via global_hooks."
+                },
+                "kind": {
+                    "type": "string",
+                    "description": "Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook."
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Unique hook name (\u003c= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook."
+                },
+                "onEmpty": {
+                    "type": "string",
+                    "description": "Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads)."
+                },
+                "onError": {
+                    "type": "string",
+                    "description": "Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing."
+                },
+                "priority": {
+                    "type": "integer",
+                    "description": "Ordering priority within a stage. Defaults to 0."
+                },
+                "prompt": {
+                    "type": "string",
+                    "description": "Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)"
+                },
+                "settings": {
+                    "type": "string",
+                    "description": "Opaque per-hook settings as a JSON object string (\u003c= 64KiB, \u003c= 256 keys). Defaults to {}."
+                },
+                "socket": {
+                    "type": "string",
+                    "description": "Unix socket path to the hook process. Exactly one of socket or webhook."
+                },
+                "timeoutMs": {
+                    "type": "integer",
+                    "description": "Per-call timeout in milliseconds. Defaults to 1."
+                },
+                "user": {
+                    "type": "string",
+                    "description": "Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook."
+                },
+                "webhook": {
+                    "type": "string",
+                    "description": "Webhook URL for the hook. Exactly one of socket or webhook."
+                }
+            },
+            "requiredInputs": [
+                "kind"
+            ],
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering Hook resources.\n",
+                "properties": {
+                    "at": {
+                        "type": "string",
+                        "description": "Pipeline stage: request, route, attempt, or completion. Null lets busbar place it by kind."
+                    },
+                    "default": {
+                        "type": "boolean",
+                        "description": "Whether this hook is the default for its stage. Write-only (not echoed by reads)."
+                    },
+                    "global": {
+                        "type": "boolean",
+                        "description": "Whether the hook applies globally (all pools). Defaults to false. May read back true if wired via global_hooks."
+                    },
+                    "kind": {
+                        "type": "string",
+                        "description": "Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook."
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Unique hook name (\u003c= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook."
+                    },
+                    "onEmpty": {
+                        "type": "string",
+                        "description": "Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads)."
+                    },
+                    "onError": {
+                        "type": "string",
+                        "description": "Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing."
+                    },
+                    "priority": {
+                        "type": "integer",
+                        "description": "Ordering priority within a stage. Defaults to 0."
+                    },
+                    "prompt": {
+                        "type": "string",
+                        "description": "Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)"
+                    },
+                    "settings": {
+                        "type": "string",
+                        "description": "Opaque per-hook settings as a JSON object string (\u003c= 64KiB, \u003c= 256 keys). Defaults to {}."
+                    },
+                    "socket": {
+                        "type": "string",
+                        "description": "Unix socket path to the hook process. Exactly one of socket or webhook."
+                    },
+                    "timeoutMs": {
+                        "type": "integer",
+                        "description": "Per-call timeout in milliseconds. Defaults to 1."
+                    },
+                    "user": {
+                        "type": "string",
+                        "description": "Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook."
+                    },
+                    "webhook": {
+                        "type": "string",
+                        "description": "Webhook URL for the hook. Exactly one of socket or webhook."
+                    }
+                },
+                "type": "object"
+            }
+        },
+        "busbar:index/virtualKey:VirtualKey": {
+            "properties": {
+                "allowedPools": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation)."
+                },
+                "awsAccessKeyId": {
+                    "type": "string",
+                    "description": "AWS-style access key id, when\u003cspan pulumi-lang-nodejs=\" issueAwsCredential \" pulumi-lang-dotnet=\" IssueAwsCredential \" pulumi-lang-go=\" issueAwsCredential \" pulumi-lang-python=\" issue_aws_credential \" pulumi-lang-yaml=\" issueAwsCredential \" pulumi-lang-java=\" issueAwsCredential \" pulumi-lang-hcl=\" issue_aws_credential \"\u003e issueAwsCredential \u003c/span\u003eis true. Returned only at creation."
+                },
+                "awsSecretAccessKey": {
+                    "type": "string",
+                    "description": "AWS-style secret access key, when\u003cspan pulumi-lang-nodejs=\" issueAwsCredential \" pulumi-lang-dotnet=\" IssueAwsCredential \" pulumi-lang-go=\" issueAwsCredential \" pulumi-lang-python=\" issue_aws_credential \" pulumi-lang-yaml=\" issueAwsCredential \" pulumi-lang-java=\" issueAwsCredential \" pulumi-lang-hcl=\" issue_aws_credential \"\u003e issueAwsCredential \u003c/span\u003eis true. Returned only at creation; stored in state and never re-read.",
+                    "secret": true
+                },
+                "budgetPeriod": {
+                    "type": "string",
+                    "description": "Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key."
+                },
+                "createdAt": {
+                    "type": "integer",
+                    "description": "Epoch seconds the key was minted."
+                },
+                "enabled": {
+                    "type": "boolean",
+                    "description": "Whether the key currently resolves. A key is created enabled; disable it out-of-band via the admin API."
+                },
+                "issueAwsCredential": {
+                    "type": "boolean",
+                    "description": "When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable."
+                },
+                "maxBudgetCents": {
+                    "type": "integer",
+                    "description": "Spend cap in cents over the budget window (\u003e= 0). Omit for unlimited. Mutable via PATCH."
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Human-readable label (\u003c= 256 chars). Immutable; changing it replaces the key."
+                },
+                "rpmLimit": {
+                    "type": "integer",
+                    "description": "Requests-per-minute cap (\u003e= 1). Omit for unlimited. Mutable via PATCH."
+                },
+                "secret": {
+                    "type": "string",
+                    "description": "The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.",
+                    "secret": true
+                },
+                "tpmLimit": {
+                    "type": "integer",
+                    "description": "Tokens-per-minute cap (\u003e= 1). Omit for unlimited. Mutable via PATCH."
+                }
+            },
+            "required": [
+                "awsAccessKeyId",
+                "awsSecretAccessKey",
+                "budgetPeriod",
+                "createdAt",
+                "enabled",
+                "name",
+                "secret"
+            ],
+            "inputProperties": {
+                "allowedPools": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation)."
+                },
+                "budgetPeriod": {
+                    "type": "string",
+                    "description": "Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key."
+                },
+                "issueAwsCredential": {
+                    "type": "boolean",
+                    "description": "When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable."
+                },
+                "maxBudgetCents": {
+                    "type": "integer",
+                    "description": "Spend cap in cents over the budget window (\u003e= 0). Omit for unlimited. Mutable via PATCH."
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Human-readable label (\u003c= 256 chars). Immutable; changing it replaces the key."
+                },
+                "rpmLimit": {
+                    "type": "integer",
+                    "description": "Requests-per-minute cap (\u003e= 1). Omit for unlimited. Mutable via PATCH."
+                },
+                "tpmLimit": {
+                    "type": "integer",
+                    "description": "Tokens-per-minute cap (\u003e= 1). Omit for unlimited. Mutable via PATCH."
+                }
+            },
+            "stateInputs": {
+                "description": "Input properties used for looking up and filtering VirtualKey resources.\n",
+                "properties": {
+                    "allowedPools": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation)."
+                    },
+                    "awsAccessKeyId": {
+                        "type": "string",
+                        "description": "AWS-style access key id, when\u003cspan pulumi-lang-nodejs=\" issueAwsCredential \" pulumi-lang-dotnet=\" IssueAwsCredential \" pulumi-lang-go=\" issueAwsCredential \" pulumi-lang-python=\" issue_aws_credential \" pulumi-lang-yaml=\" issueAwsCredential \" pulumi-lang-java=\" issueAwsCredential \" pulumi-lang-hcl=\" issue_aws_credential \"\u003e issueAwsCredential \u003c/span\u003eis true. Returned only at creation."
+                    },
+                    "awsSecretAccessKey": {
+                        "type": "string",
+                        "description": "AWS-style secret access key, when\u003cspan pulumi-lang-nodejs=\" issueAwsCredential \" pulumi-lang-dotnet=\" IssueAwsCredential \" pulumi-lang-go=\" issueAwsCredential \" pulumi-lang-python=\" issue_aws_credential \" pulumi-lang-yaml=\" issueAwsCredential \" pulumi-lang-java=\" issueAwsCredential \" pulumi-lang-hcl=\" issue_aws_credential \"\u003e issueAwsCredential \u003c/span\u003eis true. Returned only at creation; stored in state and never re-read.",
+                        "secret": true
+                    },
+                    "budgetPeriod": {
+                        "type": "string",
+                        "description": "Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key."
+                    },
+                    "createdAt": {
+                        "type": "integer",
+                        "description": "Epoch seconds the key was minted."
+                    },
+                    "enabled": {
+                        "type": "boolean",
+                        "description": "Whether the key currently resolves. A key is created enabled; disable it out-of-band via the admin API."
+                    },
+                    "issueAwsCredential": {
+                        "type": "boolean",
+                        "description": "When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable."
+                    },
+                    "maxBudgetCents": {
+                        "type": "integer",
+                        "description": "Spend cap in cents over the budget window (\u003e= 0). Omit for unlimited. Mutable via PATCH."
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "Human-readable label (\u003c= 256 chars). Immutable; changing it replaces the key."
+                    },
+                    "rpmLimit": {
+                        "type": "integer",
+                        "description": "Requests-per-minute cap (\u003e= 1). Omit for unlimited. Mutable via PATCH."
+                    },
+                    "secret": {
+                        "type": "string",
+                        "description": "The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.",
+                        "secret": true
+                    },
+                    "tpmLimit": {
+                        "type": "integer",
+                        "description": "Tokens-per-minute cap (\u003e= 1). Omit for unlimited. Mutable via PATCH."
+                    }
+                },
+                "type": "object"
+            }
+        }
+    },
+    "functions": {
+        "busbar:index/getInfo:getInfo": {
+            "outputs": {
+                "description": "A collection of values returned by getInfo.\n",
+                "properties": {
+                    "authModules": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "configPersistence": {
+                        "type": "boolean"
+                    },
+                    "configVersion": {
+                        "type": "integer"
+                    },
+                    "hookPlugins": {
+                        "items": {
+                            "type": "string"
+                        },
+                        "type": "array"
+                    },
+                    "id": {
+                        "description": "The provider-assigned unique ID for this managed resource.",
+                        "type": "string"
+                    },
+                    "models": {
+                        "type": "integer"
+                    },
+                    "pools": {
+                        "type": "integer"
+                    },
+                    "providers": {
+                        "type": "integer"
+                    },
+                    "startedAt": {
+                        "type": "integer"
+                    },
+                    "uptimeSeconds": {
+                        "type": "integer"
+                    },
+                    "version": {
+                        "type": "string"
+                    },
+                    "weightedFloor": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "authModules",
+                    "configPersistence",
+                    "configVersion",
+                    "hookPlugins",
+                    "models",
+                    "pools",
+                    "providers",
+                    "startedAt",
+                    "uptimeSeconds",
+                    "version",
+                    "weightedFloor",
+                    "id"
+                ],
+                "type": "object"
+            }
+        },
+        "pulumi:providers:busbar/terraformConfig": {
+            "description": "This function returns a Terraform config object with terraform-namecased keys,to be used with the Terraform Module Provider.",
+            "inputs": {
+                "properties": {
+                    "__self__": {
+                        "type": "ref",
+                        "$ref": "#/provider"
+                    }
+                },
+                "type": "pulumi:providers:busbar/terraformConfig",
+                "required": [
+                    "__self__"
+                ]
+            },
+            "outputs": {
+                "properties": {
+                    "result": {
+                        "additionalProperties": {
+                            "$ref": "pulumi.json#/Any"
+                        },
+                        "type": "object"
+                    }
+                },
+                "required": [
+                    "result"
+                ],
+                "type": "object"
+            }
+        }
+    }
+}

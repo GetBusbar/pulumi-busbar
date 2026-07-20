@@ -1,0 +1,30 @@
+{
+    "name": "@getbusbar/pulumi-busbar",
+    "version": "${VERSION}",
+    "description": "A Pulumi package for creating and managing Busbar LLM gateway resources through its admin API.",
+    "keywords": [
+        "pulumi",
+        "busbar",
+        "llm",
+        "gateway",
+        "ai",
+        "category/utility"
+    ],
+    "homepage": "https://getbusbar.com",
+    "repository": "https://github.com/getbusbar/pulumi-busbar",
+    "license": "Apache-2.0",
+    "scripts": {
+        "build": "tsc"
+    },
+    "dependencies": {
+        "@pulumi/pulumi": "^3.0.0"
+    },
+    "devDependencies": {
+        "@types/node": "^18",
+        "typescript": "^4.7.0"
+    },
+    "pulumi": {
+        "resource": true,
+        "name": "busbar"
+    }
+}

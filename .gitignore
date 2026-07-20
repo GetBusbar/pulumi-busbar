@@ -1,0 +1,32 @@
+# Build output
+/bin/
+*.exe
+
+# Go
+vendor/
+
+# Node SDK build artifacts (generated .ts sources ARE committed; build output is not)
+sdk/nodejs/bin/
+sdk/nodejs/node_modules/
+sdk/nodejs/package-lock.json
+sdk/nodejs/yarn.lock
+
+# Python build artifacts
+sdk/python/bin/
+sdk/python/build/
+sdk/python/dist/
+sdk/python/*.egg-info/
+__pycache__/
+
+# Pulumi
+Pulumi.yaml
+Pulumi.*.yaml
+.pulumi/
+
+# tfgen scratch schema written next to the embedded copy
+provider/cmd/pulumi-resource-busbar/schema.json
+
+# Editors / OS
+.DS_Store
+.idea/
+.vscode/
