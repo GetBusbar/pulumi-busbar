@@ -4,6 +4,65 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as utilities from "./utilities";
 
+/**
+ * A GitOps singleton that owns the running busbar config and applies it wholesale (POST /api/v1/admin/config/apply). Manage at most ONE of these per gateway. The document is the full JSON config payload busbar boots from ({"config": {...}, "providers": {...}}); applying it bumps config_version. Applies are LIVE-ONLY by default — they revert to disk truth on the next reload or restart unless the gateway persists an overlay. Destroying this resource is a no-op on the gateway (there is no unapply); it only drops Terraform's tracking.
+ *
+ * ## Example Usage
+ *
+ * ```typescript
+ * import * as pulumi from "@pulumi/pulumi";
+ * import * as busbar from "@getbusbar/pulumi-busbar";
+ *
+ * // GitOps singleton: apply the whole running config document. Manage AT MOST ONE
+ * // busbar_config per gateway. The document is the JSON payload busbar boots from,
+ * // an envelope of { config = {DeployCfg}, providers = {name = ProviderDef} }.
+ * //
+ * // Applies are live-only by default: they revert to disk truth on the next reload
+ * // or restart unless the gateway persists an overlay. Destroying this resource is a
+ * // no-op on the gateway (there is no "unapply"); it only drops Terraform's tracking.
+ * const running = new busbar.Config("running", {document: JSON.stringify({
+ *     config: {
+ *         auth: null,
+ *         models: {
+ *             "claude-sonnet": {
+ *                 provider: "anthropic",
+ *                 max_concurrent: 8,
+ *                 max_requests: -1,
+ *             },
+ *         },
+ *         providers: {
+ *             anthropic: {
+ *                 api_key_env: "ANTHROPIC_API_KEY",
+ *             },
+ *         },
+ *         governance: {
+ *             enabled: true,
+ *             db_path: "/var/lib/busbar/governance.db",
+ *             admin_token: busbarAdminToken,
+ *         },
+ *     },
+ *     providers: {
+ *         anthropic: {
+ *             protocol: "anthropic",
+ *             base_url: "https://api.anthropic.com",
+ *         },
+ *     },
+ * })});
+ * export const configVersion = running.configVersion;
+ * ```
+ *
+ * ## Import
+ *
+ * The `pulumi import` command can be used, for example:
+ *
+ * The config singleton has a fixed import id. The document is not recoverable
+ * (GET /config is a redacted projection), so supply the matching `document` in
+ * your configuration after import; only configVersion is read live.
+ *
+ * ```sh
+ * $ pulumi import busbar:index/config:Config running config
+ * ```
+ */
 export class Config extends pulumi.CustomResource {
     /**
      * Get an existing Config resource's state with the given name, ID, and optional extra

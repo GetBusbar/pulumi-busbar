@@ -11,6 +11,34 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
+// Read-only view of the target busbar gateway: version, the compiled-in plugin proof, uptime, and topology counts (GET /api/v1/admin/info).
+//
+// ## Example Usage
+//
+// ```go
+// package main
+//
+// import (
+//
+//	"github.com/getbusbar/pulumi-busbar/sdk/go/busbar"
+//	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+//
+// )
+//
+//	func main() {
+//		pulumi.Run(func(ctx *pulumi.Context) error {
+//			// Read the target gateway's version, compiled-in plugin proof, and topology.
+//			current, err := busbar.GetInfo(ctx, map[string]interface{}{}, nil)
+//			if err != nil {
+//				return err
+//			}
+//			ctx.Export("busbarVersion", current.Version)
+//			ctx.Export("compiledAuthModules", current.AuthModules)
+//			return nil
+//		})
+//	}
+//
+// ```
 func GetInfo(ctx *pulumi.Context, opts ...pulumi.InvokeOption) (*GetInfoResult, error) {
 	opts = internal.PkgInvokeDefaultOpts(opts)
 	var rv GetInfoResult
@@ -23,19 +51,30 @@ func GetInfo(ctx *pulumi.Context, opts ...pulumi.InvokeOption) (*GetInfoResult, 
 
 // A collection of values returned by getInfo.
 type GetInfoResult struct {
-	AuthModules       []string `pulumi:"authModules"`
-	ConfigPersistence bool     `pulumi:"configPersistence"`
-	ConfigVersion     int      `pulumi:"configVersion"`
-	HookPlugins       []string `pulumi:"hookPlugins"`
+	// Auth modules compiled into this binary (the compliance-by-compilation proof).
+	AuthModules []string `pulumi:"authModules"`
+	// Whether API-applied config changes are durable across restarts (BUSBAR*CONFIG*OVERLAY set) versus live-only.
+	ConfigPersistence bool `pulumi:"configPersistence"`
+	// Monotonic config version — 0 at boot, +1 per API config apply. Process-local; resets on restart.
+	ConfigVersion int `pulumi:"configVersion"`
+	// Hook plugins compiled into this binary.
+	HookPlugins []string `pulumi:"hookPlugins"`
 	// The provider-assigned unique ID for this managed resource.
-	Id            string `pulumi:"id"`
-	Models        int    `pulumi:"models"`
-	Pools         int    `pulumi:"pools"`
-	Providers     int    `pulumi:"providers"`
-	StartedAt     int    `pulumi:"startedAt"`
-	UptimeSeconds int    `pulumi:"uptimeSeconds"`
-	Version       string `pulumi:"version"`
-	WeightedFloor bool   `pulumi:"weightedFloor"`
+	Id string `pulumi:"id"`
+	// Number of configured model lanes.
+	Models int `pulumi:"models"`
+	// Number of configured pools.
+	Pools int `pulumi:"pools"`
+	// Number of configured providers.
+	Providers int `pulumi:"providers"`
+	// Epoch seconds of process start — the boot-epoch marker. A changed value means a restart (config_version resets), never a config revert.
+	StartedAt int `pulumi:"startedAt"`
+	// Seconds since the gateway process started; null if never stamped.
+	UptimeSeconds int `pulumi:"uptimeSeconds"`
+	// busbar semantic version reported by the gateway.
+	Version string `pulumi:"version"`
+	// The inline SWRR floor — always true (compiled in unconditionally).
+	WeightedFloor bool `pulumi:"weightedFloor"`
 }
 
 func GetInfoOutput(ctx *pulumi.Context, opts ...pulumi.InvokeOption) GetInfoResultOutput {
@@ -60,18 +99,22 @@ func (o GetInfoResultOutput) ToGetInfoResultOutputWithContext(ctx context.Contex
 	return o
 }
 
+// Auth modules compiled into this binary (the compliance-by-compilation proof).
 func (o GetInfoResultOutput) AuthModules() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v GetInfoResult) []string { return v.AuthModules }).(pulumi.StringArrayOutput)
 }
 
+// Whether API-applied config changes are durable across restarts (BUSBAR*CONFIG*OVERLAY set) versus live-only.
 func (o GetInfoResultOutput) ConfigPersistence() pulumi.BoolOutput {
 	return o.ApplyT(func(v GetInfoResult) bool { return v.ConfigPersistence }).(pulumi.BoolOutput)
 }
 
+// Monotonic config version — 0 at boot, +1 per API config apply. Process-local; resets on restart.
 func (o GetInfoResultOutput) ConfigVersion() pulumi.IntOutput {
 	return o.ApplyT(func(v GetInfoResult) int { return v.ConfigVersion }).(pulumi.IntOutput)
 }
 
+// Hook plugins compiled into this binary.
 func (o GetInfoResultOutput) HookPlugins() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v GetInfoResult) []string { return v.HookPlugins }).(pulumi.StringArrayOutput)
 }
@@ -81,30 +124,37 @@ func (o GetInfoResultOutput) Id() pulumi.StringOutput {
 	return o.ApplyT(func(v GetInfoResult) string { return v.Id }).(pulumi.StringOutput)
 }
 
+// Number of configured model lanes.
 func (o GetInfoResultOutput) Models() pulumi.IntOutput {
 	return o.ApplyT(func(v GetInfoResult) int { return v.Models }).(pulumi.IntOutput)
 }
 
+// Number of configured pools.
 func (o GetInfoResultOutput) Pools() pulumi.IntOutput {
 	return o.ApplyT(func(v GetInfoResult) int { return v.Pools }).(pulumi.IntOutput)
 }
 
+// Number of configured providers.
 func (o GetInfoResultOutput) Providers() pulumi.IntOutput {
 	return o.ApplyT(func(v GetInfoResult) int { return v.Providers }).(pulumi.IntOutput)
 }
 
+// Epoch seconds of process start — the boot-epoch marker. A changed value means a restart (config_version resets), never a config revert.
 func (o GetInfoResultOutput) StartedAt() pulumi.IntOutput {
 	return o.ApplyT(func(v GetInfoResult) int { return v.StartedAt }).(pulumi.IntOutput)
 }
 
+// Seconds since the gateway process started; null if never stamped.
 func (o GetInfoResultOutput) UptimeSeconds() pulumi.IntOutput {
 	return o.ApplyT(func(v GetInfoResult) int { return v.UptimeSeconds }).(pulumi.IntOutput)
 }
 
+// busbar semantic version reported by the gateway.
 func (o GetInfoResultOutput) Version() pulumi.StringOutput {
 	return o.ApplyT(func(v GetInfoResult) string { return v.Version }).(pulumi.StringOutput)
 }
 
+// The inline SWRR floor — always true (compiled in unconditionally).
 func (o GetInfoResultOutput) WeightedFloor() pulumi.BoolOutput {
 	return o.ApplyT(func(v GetInfoResult) bool { return v.WeightedFloor }).(pulumi.BoolOutput)
 }

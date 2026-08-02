@@ -90,7 +90,65 @@ class Config(pulumi.CustomResource):
                  document: pulumi.Input[Optional[_builtins.str]] = None,
                  __props__=None):
         """
-        Create a Config resource with the given unique name, props, and options.
+        A GitOps singleton that owns the running busbar config and applies it wholesale (POST /api/v1/admin/config/apply). Manage at most ONE of these per gateway. The document is the full JSON config payload busbar boots from ({"config": {...}, "providers": {...}}); applying it bumps config_version. Applies are LIVE-ONLY by default — they revert to disk truth on the next reload or restart unless the gateway persists an overlay. Destroying this resource is a no-op on the gateway (there is no unapply); it only drops Terraform's tracking.
+
+        ## Example Usage
+
+        ```python
+        import pulumi
+        import json
+        import pulumi_busbar as busbar
+
+        # GitOps singleton: apply the whole running config document. Manage AT MOST ONE
+        # busbar_config per gateway. The document is the JSON payload busbar boots from,
+        # an envelope of { config = {DeployCfg}, providers = {name = ProviderDef} }.
+        #
+        # Applies are live-only by default: they revert to disk truth on the next reload
+        # or restart unless the gateway persists an overlay. Destroying this resource is a
+        # no-op on the gateway (there is no "unapply"); it only drops Terraform's tracking.
+        running = busbar.Config("running", document=json.dumps({
+            "config": {
+                "auth": None,
+                "models": {
+                    "claude-sonnet": {
+                        "provider": "anthropic",
+                        "max_concurrent": 8,
+                        "max_requests": -1,
+                    },
+                },
+                "providers": {
+                    "anthropic": {
+                        "api_key_env": "ANTHROPIC_API_KEY",
+                    },
+                },
+                "governance": {
+                    "enabled": True,
+                    "db_path": "/var/lib/busbar/governance.db",
+                    "admin_token": busbar_admin_token,
+                },
+            },
+            "providers": {
+                "anthropic": {
+                    "protocol": "anthropic",
+                    "base_url": "https://api.anthropic.com",
+                },
+            },
+        }))
+        pulumi.export("configVersion", running.config_version)
+        ```
+
+        ## Import
+
+        The `pulumi import` command can be used, for example:
+
+        The config singleton has a fixed import id. The document is not recoverable
+        (GET /config is a redacted projection), so supply the matching `document` in
+        your configuration after import; only config_version is read live.
+
+        ```sh
+        $ pulumi import busbar:index/config:Config running config
+        ```
+
 
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
@@ -103,7 +161,65 @@ class Config(pulumi.CustomResource):
                  args: ConfigArgs,
                  opts: Optional[pulumi.ResourceOptions] = None):
         """
-        Create a Config resource with the given unique name, props, and options.
+        A GitOps singleton that owns the running busbar config and applies it wholesale (POST /api/v1/admin/config/apply). Manage at most ONE of these per gateway. The document is the full JSON config payload busbar boots from ({"config": {...}, "providers": {...}}); applying it bumps config_version. Applies are LIVE-ONLY by default — they revert to disk truth on the next reload or restart unless the gateway persists an overlay. Destroying this resource is a no-op on the gateway (there is no unapply); it only drops Terraform's tracking.
+
+        ## Example Usage
+
+        ```python
+        import pulumi
+        import json
+        import pulumi_busbar as busbar
+
+        # GitOps singleton: apply the whole running config document. Manage AT MOST ONE
+        # busbar_config per gateway. The document is the JSON payload busbar boots from,
+        # an envelope of { config = {DeployCfg}, providers = {name = ProviderDef} }.
+        #
+        # Applies are live-only by default: they revert to disk truth on the next reload
+        # or restart unless the gateway persists an overlay. Destroying this resource is a
+        # no-op on the gateway (there is no "unapply"); it only drops Terraform's tracking.
+        running = busbar.Config("running", document=json.dumps({
+            "config": {
+                "auth": None,
+                "models": {
+                    "claude-sonnet": {
+                        "provider": "anthropic",
+                        "max_concurrent": 8,
+                        "max_requests": -1,
+                    },
+                },
+                "providers": {
+                    "anthropic": {
+                        "api_key_env": "ANTHROPIC_API_KEY",
+                    },
+                },
+                "governance": {
+                    "enabled": True,
+                    "db_path": "/var/lib/busbar/governance.db",
+                    "admin_token": busbar_admin_token,
+                },
+            },
+            "providers": {
+                "anthropic": {
+                    "protocol": "anthropic",
+                    "base_url": "https://api.anthropic.com",
+                },
+            },
+        }))
+        pulumi.export("configVersion", running.config_version)
+        ```
+
+        ## Import
+
+        The `pulumi import` command can be used, for example:
+
+        The config singleton has a fixed import id. The document is not recoverable
+        (GET /config is a redacted projection), so supply the matching `document` in
+        your configuration after import; only config_version is read live.
+
+        ```sh
+        $ pulumi import busbar:index/config:Config running config
+        ```
+
 
         :param str resource_name: The name of the resource.
         :param ConfigArgs args: The arguments to use to populate this resource's properties.

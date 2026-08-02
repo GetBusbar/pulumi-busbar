@@ -12,6 +12,72 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
+// A routing hook: an external tap or gate reached over a unix socket or webhook, wired into busbar's request/ranking pipeline (POST/GET/PUT/DELETE /api/v1/admin/hooks). Exactly one of socket or webhook must be set. The grant fields (kind, prompt, user) are immutable once registered — changing them replaces the hook.
+//
+// ## Example Usage
+//
+// ```go
+// package main
+//
+// import (
+//
+//	"encoding/json"
+//
+//	"github.com/getbusbar/pulumi-busbar/sdk/go/busbar"
+//	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+//
+// )
+//
+//	func main() {
+//		pulumi.Run(func(ctx *pulumi.Context) error {
+//			tmpJSON0, err := json.Marshal(map[string]interface{}{
+//				"min_score": 0.6,
+//			})
+//			if err != nil {
+//				return err
+//			}
+//			json0 := string(tmpJSON0)
+//			// Register a blocking "gate" hook reached over a webhook: it may inspect
+//			// (prompt = "ro") and rerank candidates before the request is dispatched.
+//			_, err = busbar.NewHook(ctx, "ranker", &busbar.HookArgs{
+//				Name:      pulumi.String("quality-ranker"),
+//				Kind:      pulumi.String("gate"),
+//				Webhook:   pulumi.String("https://ranker.internal.example/rank"),
+//				Prompt:    pulumi.String("ro"),
+//				TimeoutMs: pulumi.Int(100),
+//				Priority:  pulumi.Int(10),
+//				OnError:   pulumi.String("weighted"),
+//				Settings:  pulumi.String(json0),
+//			})
+//			if err != nil {
+//				return err
+//			}
+//			// A fire-and-forget "tap" hook over a unix socket for async usage telemetry.
+//			_, err = busbar.NewHook(ctx, "usage_tap", &busbar.HookArgs{
+//				Name:   pulumi.String("usage-telemetry"),
+//				Kind:   pulumi.String("tap"),
+//				Socket: pulumi.String("/run/busbar/usage.sock"),
+//				At:     pulumi.String("completion"),
+//				Global: pulumi.Bool(true),
+//			})
+//			if err != nil {
+//				return err
+//			}
+//			return nil
+//		})
+//	}
+//
+// ```
+//
+// ## Import
+//
+// The `pulumi import` command can be used, for example:
+//
+// Hooks are imported by name.
+//
+// ```sh
+// $ pulumi import busbar:index/hook:Hook ranker quality-ranker
+// ```
 type Hook struct {
 	pulumi.CustomResourceState
 

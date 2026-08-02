@@ -4,6 +4,40 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as utilities from "./utilities";
 
+/**
+ * A governance virtual key: a mintable, revocable credential with budget and rate caps scoped to a set of pools (POST/GET/PATCH/DELETE /api/v1/admin/keys). The plaintext secret is returned by busbar only once, at creation, and is stored in state as a sensitive value; refreshes update metadata (budget/limits/enabled) but never the secret. Requires `governance:` to be enabled on the gateway.
+ *
+ * ## Example Usage
+ *
+ * ```typescript
+ * import * as pulumi from "@pulumi/pulumi";
+ * import * as busbar from "@getbusbar/pulumi-busbar";
+ *
+ * // Mint a governance virtual key with a daily budget and a request-rate cap,
+ * // scoped to the "smart" pool. The plaintext secret is returned only once, at
+ * // creation, and stored in state as a sensitive value.
+ * const app = new busbar.VirtualKey("app", {
+ *     name: "checkout-service",
+ *     budgetPeriod: "daily",
+ *     maxBudgetCents: 5000,
+ *     rpmLimit: 60,
+ *     tpmLimit: 200000,
+ *     allowedPools: ["smart"],
+ * });
+ * export const appKeySecret = app.secret;
+ * ```
+ *
+ * ## Import
+ *
+ * The `pulumi import` command can be used, for example:
+ *
+ * Virtual keys are imported by their server-assigned id (the plaintext secret
+ * cannot be recovered — it is create-only — and stays null after import).
+ *
+ * ```sh
+ * $ pulumi import busbar:index/virtualKey:VirtualKey app vk_0123456789abcdef
+ * ```
+ */
 export class VirtualKey extends pulumi.CustomResource {
     /**
      * Get an existing VirtualKey resource's state with the given name, ID, and optional extra
@@ -37,11 +71,11 @@ export class VirtualKey extends pulumi.CustomResource {
      */
     declare public readonly allowedPools: pulumi.Output<string[] | undefined>;
     /**
-     * AWS-style access key id, when issueAwsCredential is true. Returned only at creation.
+     * AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
      */
     declare public /*out*/ readonly awsAccessKeyId: pulumi.Output<string>;
     /**
-     * AWS-style secret access key, when issueAwsCredential is true. Returned only at creation; stored in state and never re-read.
+     * AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
      */
     declare public /*out*/ readonly awsSecretAccessKey: pulumi.Output<string>;
     /**
@@ -137,11 +171,11 @@ export interface VirtualKeyState {
      */
     allowedPools?: pulumi.Input<pulumi.Input<string>[] | undefined>;
     /**
-     * AWS-style access key id, when issueAwsCredential is true. Returned only at creation.
+     * AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
      */
     awsAccessKeyId?: pulumi.Input<string | undefined>;
     /**
-     * AWS-style secret access key, when issueAwsCredential is true. Returned only at creation; stored in state and never re-read.
+     * AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
      */
     awsSecretAccessKey?: pulumi.Input<string | undefined>;
     /**

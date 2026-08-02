@@ -503,7 +503,47 @@ class Hook(pulumi.CustomResource):
                  webhook: pulumi.Input[Optional[_builtins.str]] = None,
                  __props__=None):
         """
-        Create a Hook resource with the given unique name, props, and options.
+        A routing hook: an external tap or gate reached over a unix socket or webhook, wired into busbar's request/ranking pipeline (POST/GET/PUT/DELETE /api/v1/admin/hooks). Exactly one of socket or webhook must be set. The grant fields (kind, prompt, user) are immutable once registered — changing them replaces the hook.
+
+        ## Example Usage
+
+        ```python
+        import pulumi
+        import json
+        import pulumi_busbar as busbar
+
+        # Register a blocking "gate" hook reached over a webhook: it may inspect
+        # (prompt = "ro") and rerank candidates before the request is dispatched.
+        ranker = busbar.Hook("ranker",
+            name="quality-ranker",
+            kind="gate",
+            webhook="https://ranker.internal.example/rank",
+            prompt="ro",
+            timeout_ms=100,
+            priority=10,
+            on_error="weighted",
+            settings=json.dumps({
+                "min_score": 0.6,
+            }))
+        # A fire-and-forget "tap" hook over a unix socket for async usage telemetry.
+        usage_tap = busbar.Hook("usage_tap",
+            name="usage-telemetry",
+            kind="tap",
+            socket="/run/busbar/usage.sock",
+            at="completion",
+            global_=True)
+        ```
+
+        ## Import
+
+        The `pulumi import` command can be used, for example:
+
+        Hooks are imported by name.
+
+        ```sh
+        $ pulumi import busbar:index/hook:Hook ranker quality-ranker
+        ```
+
 
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
@@ -529,7 +569,47 @@ class Hook(pulumi.CustomResource):
                  args: HookArgs,
                  opts: Optional[pulumi.ResourceOptions] = None):
         """
-        Create a Hook resource with the given unique name, props, and options.
+        A routing hook: an external tap or gate reached over a unix socket or webhook, wired into busbar's request/ranking pipeline (POST/GET/PUT/DELETE /api/v1/admin/hooks). Exactly one of socket or webhook must be set. The grant fields (kind, prompt, user) are immutable once registered — changing them replaces the hook.
+
+        ## Example Usage
+
+        ```python
+        import pulumi
+        import json
+        import pulumi_busbar as busbar
+
+        # Register a blocking "gate" hook reached over a webhook: it may inspect
+        # (prompt = "ro") and rerank candidates before the request is dispatched.
+        ranker = busbar.Hook("ranker",
+            name="quality-ranker",
+            kind="gate",
+            webhook="https://ranker.internal.example/rank",
+            prompt="ro",
+            timeout_ms=100,
+            priority=10,
+            on_error="weighted",
+            settings=json.dumps({
+                "min_score": 0.6,
+            }))
+        # A fire-and-forget "tap" hook over a unix socket for async usage telemetry.
+        usage_tap = busbar.Hook("usage_tap",
+            name="usage-telemetry",
+            kind="tap",
+            socket="/run/busbar/usage.sock",
+            at="completion",
+            global_=True)
+        ```
+
+        ## Import
+
+        The `pulumi import` command can be used, for example:
+
+        Hooks are imported by name.
+
+        ```sh
+        $ pulumi import busbar:index/hook:Hook ranker quality-ranker
+        ```
+
 
         :param str resource_name: The name of the resource.
         :param HookArgs args: The arguments to use to populate this resource's properties.

@@ -67,21 +67,33 @@ class GetInfoResult:
     @_builtins.property
     @pulumi.getter(name="authModules")
     def auth_modules(self) -> Sequence[_builtins.str]:
+        """
+        Auth modules compiled into this binary (the compliance-by-compilation proof).
+        """
         return pulumi.get(self, "auth_modules")
 
     @_builtins.property
     @pulumi.getter(name="configPersistence")
     def config_persistence(self) -> _builtins.bool:
+        """
+        Whether API-applied config changes are durable across restarts (BUSBAR*CONFIG*OVERLAY set) versus live-only.
+        """
         return pulumi.get(self, "config_persistence")
 
     @_builtins.property
     @pulumi.getter(name="configVersion")
     def config_version(self) -> _builtins.int:
+        """
+        Monotonic config version — 0 at boot, +1 per API config apply. Process-local; resets on restart.
+        """
         return pulumi.get(self, "config_version")
 
     @_builtins.property
     @pulumi.getter(name="hookPlugins")
     def hook_plugins(self) -> Sequence[_builtins.str]:
+        """
+        Hook plugins compiled into this binary.
+        """
         return pulumi.get(self, "hook_plugins")
 
     @_builtins.property
@@ -95,36 +107,57 @@ class GetInfoResult:
     @_builtins.property
     @pulumi.getter
     def models(self) -> _builtins.int:
+        """
+        Number of configured model lanes.
+        """
         return pulumi.get(self, "models")
 
     @_builtins.property
     @pulumi.getter
     def pools(self) -> _builtins.int:
+        """
+        Number of configured pools.
+        """
         return pulumi.get(self, "pools")
 
     @_builtins.property
     @pulumi.getter
     def providers(self) -> _builtins.int:
+        """
+        Number of configured providers.
+        """
         return pulumi.get(self, "providers")
 
     @_builtins.property
     @pulumi.getter(name="startedAt")
     def started_at(self) -> _builtins.int:
+        """
+        Epoch seconds of process start — the boot-epoch marker. A changed value means a restart (config_version resets), never a config revert.
+        """
         return pulumi.get(self, "started_at")
 
     @_builtins.property
     @pulumi.getter(name="uptimeSeconds")
     def uptime_seconds(self) -> _builtins.int:
+        """
+        Seconds since the gateway process started; null if never stamped.
+        """
         return pulumi.get(self, "uptime_seconds")
 
     @_builtins.property
     @pulumi.getter
     def version(self) -> _builtins.str:
+        """
+        busbar semantic version reported by the gateway.
+        """
         return pulumi.get(self, "version")
 
     @_builtins.property
     @pulumi.getter(name="weightedFloor")
     def weighted_floor(self) -> _builtins.bool:
+        """
+        The inline SWRR floor — always true (compiled in unconditionally).
+        """
         return pulumi.get(self, "weighted_floor")
 
 
@@ -150,7 +183,19 @@ class AwaitableGetInfoResult(GetInfoResult):
 
 def get_info(opts: Optional[pulumi.InvokeOptions] = None) -> AwaitableGetInfoResult:
     """
-    Use this data source to access information about an existing resource.
+    Read-only view of the target busbar gateway: version, the compiled-in plugin proof, uptime, and topology counts (GET /api/v1/admin/info).
+
+    ## Example Usage
+
+    ```python
+    import pulumi
+    import pulumi_busbar as busbar
+
+    # Read the target gateway's version, compiled-in plugin proof, and topology.
+    current = busbar.get_info()
+    pulumi.export("busbarVersion", current.version)
+    pulumi.export("compiledAuthModules", current.auth_modules)
+    ```
     """
     __args__ = dict()
     opts = pulumi.InvokeOptions.merge(_utilities.get_invoke_opts_defaults(), opts)
@@ -171,7 +216,19 @@ def get_info(opts: Optional[pulumi.InvokeOptions] = None) -> AwaitableGetInfoRes
         weighted_floor=pulumi.get(__ret__, 'weighted_floor'))
 def get_info_output(opts: Optional[Union[pulumi.InvokeOptions, pulumi.InvokeOutputOptions]] = None) -> pulumi.Output[GetInfoResult]:
     """
-    Use this data source to access information about an existing resource.
+    Read-only view of the target busbar gateway: version, the compiled-in plugin proof, uptime, and topology counts (GET /api/v1/admin/info).
+
+    ## Example Usage
+
+    ```python
+    import pulumi
+    import pulumi_busbar as busbar
+
+    # Read the target gateway's version, compiled-in plugin proof, and topology.
+    current = busbar.get_info()
+    pulumi.export("busbarVersion", current.version)
+    pulumi.export("compiledAuthModules", current.auth_modules)
+    ```
     """
     __args__ = dict()
     opts = pulumi.InvokeOutputOptions.merge(_utilities.get_invoke_opts_defaults(), opts)
