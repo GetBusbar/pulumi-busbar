@@ -9,9 +9,13 @@
 #              run: no NPM_TOKEN or PYPI_API_TOKEN secret is provisioned on
 #              this repository. Those steps self-skip with a loud notice until
 #              the secrets are armed (see README "Release publishing").
-#   NOT DONE — provider plugin binaries are not published anywhere (no GitHub
-#              release assets, no Pulumi registry entry). `pulumi plugin
-#              install resource busbar` will not work until that is wired up.
+#   DONE     — provider plugin binaries ARE published as GitHub Release assets
+#              (the publish-plugin job below), cross-compiled for linux/darwin/
+#              windows on amd64+arm64, named per the Pulumi convention
+#              pulumi-resource-busbar-v<ver>-<os>-<arch>.tar.gz, via the built-in
+#              GITHUB_TOKEN (no extra secret). `pulumi plugin install resource
+#              busbar <ver> --server github://api.github.com/GetBusbar/pulumi-busbar`
+#              resolves them. A Pulumi-registry entry is still a separate follow-up.
 name: release
 
 on:
@@ -106,3 +110,75 @@ jobs:
 
       # The Go SDK is consumed directly from the tagged git module
       # (github.com/getbusbar/pulumi-busbar/sdk/go) — no separate publish step.
+
+  # Create the GitHub Release up front so the parallel plugin-matrix uploads have a target
+  # (uploading from a matrix without a pre-existing release races -> "release not found").
+  create-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create (or reuse) the GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if ! out=$(gh release create "${GITHUB_REF_NAME}" \
+              --repo "${GITHUB_REPOSITORY}" \
+              --title "pulumi-busbar ${GITHUB_REF_NAME}" \
+              --verify-tag --generate-notes 2>&1); then
+            if echo "$out" | grep -qi "already exists"; then
+              echo "Release ${GITHUB_REF_NAME} already exists — reusing it."
+            else
+              echo "$out" >&2; exit 1
+            fi
+          else
+            echo "$out"
+          fi
+
+  # Cross-compile the pulumi-resource-busbar plugin binary for every supported host and attach one
+  # tarball per platform to the Release, using the built-in GITHUB_TOKEN (works today — this repo
+  # owns the release). The provider embeds schema-embed.json via go:embed, so a plain `go build`
+  # cross-compiles without the Pulumi CLI. Named per the Pulumi plugin convention so
+  # `pulumi plugin install resource busbar <ver> --server github://api.github.com/GetBusbar/pulumi-busbar`
+  # resolves the asset.
+  publish-plugin:
+    needs: create-release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { goos: linux, goarch: amd64 }
+          - { goos: linux, goarch: arm64 }
+          - { goos: darwin, goarch: amd64 }
+          - { goos: darwin, goarch: arm64 }
+          - { goos: windows, goarch: amd64 }
+          - { goos: windows, goarch: arm64 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Build + package the plugin binary
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+        run: |
+          set -euo pipefail
+          ver="${GITHUB_REF_NAME#v}"
+          bin="pulumi-resource-busbar"
+          [ "$GOOS" = windows ] && bin="${bin}.exe"
+          ( cd provider && go build \
+              -ldflags "-X github.com/getbusbar/pulumi-busbar/provider/pkg/version.Version=${ver}" \
+              -o "${GITHUB_WORKSPACE}/${bin}" ./cmd/pulumi-resource-busbar )
+          tarball="pulumi-resource-busbar-v${ver}-${GOOS}-${GOARCH}.tar.gz"
+          tar -czf "$tarball" "$bin"
+          echo "TARBALL=$tarball" >> "$GITHUB_ENV"
+      - name: Attach to Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh release upload "${GITHUB_REF_NAME}" "${TARBALL}" --repo "${GITHUB_REPOSITORY}" --clobber

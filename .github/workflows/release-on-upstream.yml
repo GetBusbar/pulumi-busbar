@@ -1,0 +1,197 @@
+# Re-cut this Pulumi provider's own next release when the busbar stack ships.
+#
+# Upstream for THIS repo is GetBusbar/terraform-provider-busbar: provider/shim/go.mod requires it as
+# a Go module, and the tfbridge generates the Pulumi schema + SDKs from it. That require IS this
+# repo's record of what it was last built against.
+#
+# The busbar-core upstream-release dispatch is only a WAKE signal here — this repo does not consume
+# busbar core directly. On any trigger this resolves terraform-provider-busbar's LATEST release and
+# only proceeds if it is newer than the current go.mod pin. That also fixes the fleet-fan-out
+# ordering race (no-op until the TF provider release exists; the daily cron or next dispatch
+# self-heals). Runaway-safe: an idle day, or an already-ingested provider release, is a no-op.
+#
+# On a real advance this `go get`s the new terraform-provider-busbar tag into provider/shim, tidies,
+# `make build`s (regenerates schema + the committed nodejs/python/go SDKs), bumps THIS repo's own v*
+# tag, commits, and pushes the tag — which fires release.yml.
+#
+# PUBLISH REALITY (honest, no fake-green):
+#   * The provider PLUGIN binaries ARE published, as GitHub Release assets, via the built-in
+#     GITHUB_TOKEN (works today — see release.yml's publish-plugin job).
+#   * The npm (@getbusbar/pulumi-busbar) and PyPI (pulumi_busbar) SDK publishes are SECRET-GATED and
+#     currently SKIP LOUDLY: NO NPM_TOKEN or PYPI_API_TOKEN is provisioned at org or repo level.
+#     To arm SDK publishing a human must add those two repository secrets:
+#       gh secret set NPM_TOKEN      --repo GetBusbar/pulumi-busbar   # npm automation token, publish scope
+#       gh secret set PYPI_API_TOKEN --repo GetBusbar/pulumi-busbar   # PyPI project/API token
+#     Until then release.yml BUILDS both SDKs and emits a "SKIPPED - token not provisioned" warning
+#     instead of publishing them. The Go SDK needs no token (consumed straight from the git tag).
+#
+# No plain `push:` trigger, so merging this file cannot itself cut a release. Pushes use
+# RELEASE_DISPATCH_TOKEN (org secret, bypass-capable) as busbar-bot; plain GITHUB_TOKEN is rejected
+# by branch protection on main.
+name: release-on-upstream
+
+on:
+  repository_dispatch:
+    types: [upstream-release]
+  schedule:
+    - cron: "57 6 * * *" # daily; minute staggered per repo so the fleet's crons don't all fire at once
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Explicit OWN version to cut (e.g. 0.1.0). Blank = patch-bump this repo's latest v* tag, or seed the first tag."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-on-upstream-${{ github.repository }}
+  cancel-in-progress: false
+
+env:
+  # This repo has never published and has zero tags; the first real release seeds here. Independent
+  # of the busbar and terraform-provider version numbers — this is pulumi-busbar's OWN package version.
+  SEED_VERSION: v0.1.0
+  UPSTREAM_MODULE: github.com/GetBusbar/terraform-provider-busbar
+
+jobs:
+  cut:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main (bypass-capable token, full history + tags)
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: true
+          token: ${{ secrets.RELEASE_DISPATCH_TOKEN }}
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+          cache: true
+
+      - name: Install Pulumi CLI
+        run: |
+          curl -fsSL https://get.pulumi.com | sh
+          echo "$HOME/.pulumi/bin" >> "$GITHUB_PATH"
+
+      - name: Configure git identity
+        run: |
+          git config user.name "busbar-bot"
+          git config user.email "bot@getbusbar.com"
+
+      - name: Resolve whether a newer terraform-provider-busbar warrants a re-cut
+        id: resolve
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_DISPATCH_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          set -euo pipefail
+          cur_pin="$(awk -v m="$UPSTREAM_MODULE" '$1==m{print $2; exit}' provider/shim/go.mod)"
+          echo "current shim go.mod pin: ${cur_pin:-<none>}"
+          target_tag="$(gh api repos/GetBusbar/terraform-provider-busbar/releases/latest --jq .tag_name 2>/dev/null || true)"
+          echo "terraform-provider-busbar latest release: ${target_tag:-none}"
+
+          force=no
+          [ "$EVENT_NAME" = workflow_dispatch ] && force=yes
+
+          pin_stale=no
+          if [ -n "$target_tag" ] && [ "$target_tag" != "$cur_pin" ]; then
+            newest="$(printf '%s\n%s\n' "$cur_pin" "$target_tag" | sort -V | tail -1)"
+            [ "$newest" = "$target_tag" ] && pin_stale=yes
+          fi
+
+          should_cut=no
+          if [ "$force" = yes ]; then
+            should_cut=yes
+            echo "::notice::manual workflow_dispatch -> cutting a release (pin_stale=${pin_stale})"
+          elif [ "$pin_stale" = yes ]; then
+            should_cut=yes
+            echo "::notice::terraform-provider advanced (pinned=${cur_pin} -> ${target_tag}) -> cutting a release"
+          else
+            echo "::notice::no newer terraform-provider (pinned=${cur_pin:-none}, latest=${target_tag:-none}) -> nothing to do"
+          fi
+          {
+            echo "should_cut=$should_cut"
+            echo "pin_stale=$pin_stale"
+            echo "target_tag=$target_tag"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Compute this repo's next version
+        id: ver
+        if: steps.resolve.outputs.should_cut == 'yes'
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -n "${INPUT_VERSION:-}" ]; then
+            next="v${INPUT_VERSION#v}"
+            echo "::notice::using explicit workflow_dispatch version -> ${next}"
+          else
+            latest="$(git tag --list 'v*' | sort -V | tail -1)"
+            if [ -z "$latest" ]; then
+              next="$SEED_VERSION"
+              echo "::notice::no existing v* tag -> seeding first release ${next}"
+            else
+              base="${latest#v}"
+              major="$(echo "$base" | cut -d. -f1)"
+              minor="$(echo "$base" | cut -d. -f2)"
+              patch="$(echo "$base" | cut -d. -f3)"
+              next="v${major}.${minor}.$((patch + 1))"
+              echo "::notice::latest tag ${latest} -> next ${next}"
+            fi
+          fi
+          echo "tag=${next}" >> "$GITHUB_OUTPUT"
+
+      - name: Re-pin terraform-provider-busbar + regenerate schema/SDKs
+        if: steps.resolve.outputs.should_cut == 'yes' && steps.resolve.outputs.pin_stale == 'yes'
+        env:
+          TARGET_TAG: ${{ steps.resolve.outputs.target_tag }}
+          NEXT_TAG: ${{ steps.ver.outputs.tag }}
+        run: |
+          set -euo pipefail
+          ( cd provider/shim && go get "${UPSTREAM_MODULE}@${TARGET_TAG}" && go mod tidy )
+          ( cd provider && go mod tidy )
+          make build VERSION="${NEXT_TAG#v}"
+
+      - name: Guard — no-op if the tag already exists
+        id: guard
+        if: steps.resolve.outputs.should_cut == 'yes'
+        env:
+          TAG: ${{ steps.ver.outputs.tag }}
+        run: |
+          set -euo pipefail
+          if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+            echo "::notice::${TAG} already exists — idempotent no-op, exiting 0"
+            echo "exists=yes" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=no" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit the re-pin + regenerated SDKs to main
+        if: steps.guard.outputs.exists == 'no' && steps.resolve.outputs.pin_stale == 'yes'
+        env:
+          TAG: ${{ steps.ver.outputs.tag }}
+          TARGET_TAG: ${{ steps.resolve.outputs.target_tag }}
+        run: |
+          set -euo pipefail
+          git add provider/go.mod provider/go.sum provider/shim/go.mod provider/shim/go.sum \
+                  provider/cmd/pulumi-resource-busbar/schema-embed.json sdk
+          if git diff --cached --quiet; then
+            echo "::notice::pin + generated SDKs already current, no re-pin commit needed"
+          else
+            git commit -m "provider: re-pin terraform-provider-busbar to ${TARGET_TAG} + regenerate SDKs for the ${TAG} release"
+            git push origin HEAD:main
+          fi
+
+      - name: Create and push the release tag
+        if: steps.guard.outputs.exists == 'no'
+        env:
+          TAG: ${{ steps.ver.outputs.tag }}
+        run: |
+          set -euo pipefail
+          git tag "${TAG}"
+          git push origin "refs/tags/${TAG}"
+          echo "::notice::pushed ${TAG} — release.yml will build the SDKs, publish the plugin binaries to the GitHub Release (GITHUB_TOKEN), and loud-skip npm/PyPI until their tokens are provisioned"
