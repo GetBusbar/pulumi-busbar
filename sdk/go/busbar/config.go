@@ -32,23 +32,34 @@ import (
 //		pulumi.Run(func(ctx *pulumi.Context) error {
 //			tmpJSON0, err := json.Marshal(map[string]interface{}{
 //				"config": map[string]interface{}{
-//					"auth": nil,
-//					"models": map[string]interface{}{
-//						"claude-sonnet": map[string]interface{}{
-//							"provider":       "anthropic",
-//							"max_concurrent": 8,
-//							"max_requests":   -1,
+//					"auth": map[string]interface{}{
+//						"chain": []string{
+//							"keys",
+//						},
+//						"admin_auth": []map[string]interface{}{
+//							map[string]interface{}{
+//								"admin-tokens": map[string]interface{}{
+//									"token": map[string]interface{}{
+//										"env": "BUSBAR_ADMIN_TOKEN",
+//									},
+//								},
+//							},
 //						},
 //					},
 //					"providers": map[string]interface{}{
 //						"anthropic": map[string]interface{}{
-//							"api_key_env": "ANTHROPIC_API_KEY",
+//							"api_key": map[string]interface{}{
+//								"env": "ANTHROPIC_API_KEY",
+//							},
 //						},
 //					},
-//					"governance": map[string]interface{}{
-//						"enabled":     true,
-//						"db_path":     "/var/lib/busbar/governance.db",
-//						"admin_token": busbarAdminToken,
+//					"models": map[string]interface{}{
+//						"claude-sonnet": map[string]interface{}{
+//							"provider": "anthropic",
+//						},
+//					},
+//					"groups": map[string]interface{}{
+//						"team-checkout": map[string]interface{}{},
 //					},
 //				},
 //				"providers": map[string]interface{}{
@@ -63,8 +74,9 @@ import (
 //			}
 //			json0 := string(tmpJSON0)
 //			// GitOps singleton: apply the whole running config document. Manage AT MOST ONE
-//			// busbar_config per gateway. The document is the JSON payload busbar boots from,
-//			// an envelope of { config = {DeployCfg}, providers = {name = ProviderDef} }.
+//			// busbar_config per gateway. The document is the JSON form of busbar's 1.5.0
+//			// config syntax, an envelope of { config = {config.yaml deploy block},
+//			// providers = {providers.yaml document} }.
 //			//
 //			// Applies are live-only by default: they revert to disk truth on the next reload
 //			// or restart unless the gateway persists an overlay. Destroying this resource is a

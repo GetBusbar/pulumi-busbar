@@ -5,7 +5,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as utilities from "./utilities";
 
 /**
- * A routing hook: an external tap or gate reached over a unix socket or webhook, wired into busbar's request/ranking pipeline (POST/GET/PUT/DELETE /api/v1/admin/hooks). Exactly one of socket or webhook must be set. The grant fields (kind, prompt, user) are immutable once registered — changing them replaces the hook.
+ * A routing hook (busbar >= 1.5.0): a tap or gate backed by a signed `kind: hook` plugin, wired into busbar's request/ranking pipeline (POST/GET/PUT/DELETE /api/v1/admin/hooks). The grant fields (kind, prompt, user) are immutable once registered — changing them replaces the hook.
  *
  * ## Example Usage
  *
@@ -13,12 +13,13 @@ import * as utilities from "./utilities";
  * import * as pulumi from "@pulumi/pulumi";
  * import * as busbar from "@getbusbar/pulumi-busbar";
  *
- * // Register a blocking "gate" hook reached over a webhook: it may inspect
- * // (prompt = "ro") and rerank candidates before the request is dispatched.
+ * // Register a blocking "gate" hook backed by a signed `kind: hook` plugin from
+ * // the gateway's plugin catalog: it may inspect (prompt = "ro") and rerank
+ * // candidates before the request is dispatched.
  * const ranker = new busbar.Hook("ranker", {
  *     name: "quality-ranker",
  *     kind: "gate",
- *     webhook: "https://ranker.internal.example/rank",
+ *     plugin: "ranking",
  *     prompt: "ro",
  *     timeoutMs: 100,
  *     priority: 10,
@@ -27,11 +28,11 @@ import * as utilities from "./utilities";
  *         min_score: 0.6,
  *     }),
  * });
- * // A fire-and-forget "tap" hook over a unix socket for async usage telemetry.
+ * // A fire-and-forget "tap" hook for async usage telemetry.
  * const usageTap = new busbar.Hook("usage_tap", {
  *     name: "usage-telemetry",
  *     kind: "tap",
- *     socket: "/run/busbar/usage.sock",
+ *     plugin: "usage-telemetry",
  *     at: "completion",
  *     global: true,
  * });
@@ -104,6 +105,10 @@ export class Hook extends pulumi.CustomResource {
      */
     declare public readonly onError: pulumi.Output<string>;
     /**
+     * The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
+     */
+    declare public readonly plugin: pulumi.Output<string>;
+    /**
      * Ordering priority within a stage. Defaults to 0.
      */
     declare public readonly priority: pulumi.Output<number>;
@@ -116,10 +121,6 @@ export class Hook extends pulumi.CustomResource {
      */
     declare public readonly settings: pulumi.Output<string>;
     /**
-     * Unix socket path to the hook process. Exactly one of socket or webhook.
-     */
-    declare public readonly socket: pulumi.Output<string | undefined>;
-    /**
      * Per-call timeout in milliseconds. Defaults to 1.
      */
     declare public readonly timeoutMs: pulumi.Output<number>;
@@ -127,10 +128,6 @@ export class Hook extends pulumi.CustomResource {
      * Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
      */
     declare public readonly user: pulumi.Output<string>;
-    /**
-     * Webhook URL for the hook. Exactly one of socket or webhook.
-     */
-    declare public readonly webhook: pulumi.Output<string | undefined>;
 
     /**
      * Create a Hook resource with the given unique name, arguments, and options.
@@ -152,17 +149,19 @@ export class Hook extends pulumi.CustomResource {
             resourceInputs["name"] = state?.name;
             resourceInputs["onEmpty"] = state?.onEmpty;
             resourceInputs["onError"] = state?.onError;
+            resourceInputs["plugin"] = state?.plugin;
             resourceInputs["priority"] = state?.priority;
             resourceInputs["prompt"] = state?.prompt;
             resourceInputs["settings"] = state?.settings;
-            resourceInputs["socket"] = state?.socket;
             resourceInputs["timeoutMs"] = state?.timeoutMs;
             resourceInputs["user"] = state?.user;
-            resourceInputs["webhook"] = state?.webhook;
         } else {
             const args = argsOrState as HookArgs | undefined;
             if (args?.kind === undefined && !opts.urn) {
                 throw new Error("Missing required property 'kind'");
+            }
+            if (args?.plugin === undefined && !opts.urn) {
+                throw new Error("Missing required property 'plugin'");
             }
             resourceInputs["at"] = args?.at;
             resourceInputs["default"] = args?.default;
@@ -171,13 +170,12 @@ export class Hook extends pulumi.CustomResource {
             resourceInputs["name"] = args?.name;
             resourceInputs["onEmpty"] = args?.onEmpty;
             resourceInputs["onError"] = args?.onError;
+            resourceInputs["plugin"] = args?.plugin;
             resourceInputs["priority"] = args?.priority;
             resourceInputs["prompt"] = args?.prompt;
             resourceInputs["settings"] = args?.settings;
-            resourceInputs["socket"] = args?.socket;
             resourceInputs["timeoutMs"] = args?.timeoutMs;
             resourceInputs["user"] = args?.user;
-            resourceInputs["webhook"] = args?.webhook;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
         super(Hook.__pulumiType, name, resourceInputs, opts);
@@ -217,6 +215,10 @@ export interface HookState {
      */
     onError?: pulumi.Input<string | undefined>;
     /**
+     * The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
+     */
+    plugin?: pulumi.Input<string | undefined>;
+    /**
      * Ordering priority within a stage. Defaults to 0.
      */
     priority?: pulumi.Input<number | undefined>;
@@ -229,10 +231,6 @@ export interface HookState {
      */
     settings?: pulumi.Input<string | undefined>;
     /**
-     * Unix socket path to the hook process. Exactly one of socket or webhook.
-     */
-    socket?: pulumi.Input<string | undefined>;
-    /**
      * Per-call timeout in milliseconds. Defaults to 1.
      */
     timeoutMs?: pulumi.Input<number | undefined>;
@@ -240,10 +238,6 @@ export interface HookState {
      * Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
      */
     user?: pulumi.Input<string | undefined>;
-    /**
-     * Webhook URL for the hook. Exactly one of socket or webhook.
-     */
-    webhook?: pulumi.Input<string | undefined>;
 }
 
 /**
@@ -279,6 +273,10 @@ export interface HookArgs {
      */
     onError?: pulumi.Input<string | undefined>;
     /**
+     * The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
+     */
+    plugin: pulumi.Input<string>;
+    /**
      * Ordering priority within a stage. Defaults to 0.
      */
     priority?: pulumi.Input<number | undefined>;
@@ -291,10 +289,6 @@ export interface HookArgs {
      */
     settings?: pulumi.Input<string | undefined>;
     /**
-     * Unix socket path to the hook process. Exactly one of socket or webhook.
-     */
-    socket?: pulumi.Input<string | undefined>;
-    /**
      * Per-call timeout in milliseconds. Defaults to 1.
      */
     timeoutMs?: pulumi.Input<number | undefined>;
@@ -302,8 +296,4 @@ export interface HookArgs {
      * Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
      */
     user?: pulumi.Input<string | undefined>;
-    /**
-     * Webhook URL for the hook. Exactly one of socket or webhook.
-     */
-    webhook?: pulumi.Input<string | undefined>;
 }

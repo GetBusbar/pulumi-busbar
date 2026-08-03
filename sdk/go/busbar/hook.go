@@ -12,7 +12,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-// A routing hook: an external tap or gate reached over a unix socket or webhook, wired into busbar's request/ranking pipeline (POST/GET/PUT/DELETE /api/v1/admin/hooks). Exactly one of socket or webhook must be set. The grant fields (kind, prompt, user) are immutable once registered — changing them replaces the hook.
+// A routing hook (busbar >= 1.5.0): a tap or gate backed by a signed `kind: hook` plugin, wired into busbar's request/ranking pipeline (POST/GET/PUT/DELETE /api/v1/admin/hooks). The grant fields (kind, prompt, user) are immutable once registered — changing them replaces the hook.
 //
 // ## Example Usage
 //
@@ -37,12 +37,13 @@ import (
 //				return err
 //			}
 //			json0 := string(tmpJSON0)
-//			// Register a blocking "gate" hook reached over a webhook: it may inspect
-//			// (prompt = "ro") and rerank candidates before the request is dispatched.
+//			// Register a blocking "gate" hook backed by a signed `kind: hook` plugin from
+//			// the gateway's plugin catalog: it may inspect (prompt = "ro") and rerank
+//			// candidates before the request is dispatched.
 //			_, err = busbar.NewHook(ctx, "ranker", &busbar.HookArgs{
 //				Name:      pulumi.String("quality-ranker"),
 //				Kind:      pulumi.String("gate"),
-//				Webhook:   pulumi.String("https://ranker.internal.example/rank"),
+//				Plugin:    pulumi.String("ranking"),
 //				Prompt:    pulumi.String("ro"),
 //				TimeoutMs: pulumi.Int(100),
 //				Priority:  pulumi.Int(10),
@@ -52,11 +53,11 @@ import (
 //			if err != nil {
 //				return err
 //			}
-//			// A fire-and-forget "tap" hook over a unix socket for async usage telemetry.
+//			// A fire-and-forget "tap" hook for async usage telemetry.
 //			_, err = busbar.NewHook(ctx, "usage_tap", &busbar.HookArgs{
 //				Name:   pulumi.String("usage-telemetry"),
 //				Kind:   pulumi.String("tap"),
-//				Socket: pulumi.String("/run/busbar/usage.sock"),
+//				Plugin: pulumi.String("usage-telemetry"),
 //				At:     pulumi.String("completion"),
 //				Global: pulumi.Bool(true),
 //			})
@@ -95,20 +96,18 @@ type Hook struct {
 	OnEmpty pulumi.StringPtrOutput `pulumi:"onEmpty"`
 	// Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
 	OnError pulumi.StringOutput `pulumi:"onError"`
+	// The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
+	Plugin pulumi.StringOutput `pulumi:"plugin"`
 	// Ordering priority within a stage. Defaults to 0.
 	Priority pulumi.IntOutput `pulumi:"priority"`
 	// Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
 	Prompt pulumi.StringOutput `pulumi:"prompt"`
 	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
 	Settings pulumi.StringOutput `pulumi:"settings"`
-	// Unix socket path to the hook process. Exactly one of socket or webhook.
-	Socket pulumi.StringPtrOutput `pulumi:"socket"`
 	// Per-call timeout in milliseconds. Defaults to 1.
 	TimeoutMs pulumi.IntOutput `pulumi:"timeoutMs"`
 	// Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
 	User pulumi.StringOutput `pulumi:"user"`
-	// Webhook URL for the hook. Exactly one of socket or webhook.
-	Webhook pulumi.StringPtrOutput `pulumi:"webhook"`
 }
 
 // NewHook registers a new resource with the given unique name, arguments, and options.
@@ -120,6 +119,9 @@ func NewHook(ctx *pulumi.Context,
 
 	if args.Kind == nil {
 		return nil, errors.New("invalid value for required argument 'Kind'")
+	}
+	if args.Plugin == nil {
+		return nil, errors.New("invalid value for required argument 'Plugin'")
 	}
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource Hook
@@ -158,20 +160,18 @@ type hookState struct {
 	OnEmpty *string `pulumi:"onEmpty"`
 	// Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
 	OnError *string `pulumi:"onError"`
+	// The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
+	Plugin *string `pulumi:"plugin"`
 	// Ordering priority within a stage. Defaults to 0.
 	Priority *int `pulumi:"priority"`
 	// Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
 	Prompt *string `pulumi:"prompt"`
 	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
 	Settings *string `pulumi:"settings"`
-	// Unix socket path to the hook process. Exactly one of socket or webhook.
-	Socket *string `pulumi:"socket"`
 	// Per-call timeout in milliseconds. Defaults to 1.
 	TimeoutMs *int `pulumi:"timeoutMs"`
 	// Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
 	User *string `pulumi:"user"`
-	// Webhook URL for the hook. Exactly one of socket or webhook.
-	Webhook *string `pulumi:"webhook"`
 }
 
 type HookState struct {
@@ -189,20 +189,18 @@ type HookState struct {
 	OnEmpty pulumi.StringPtrInput
 	// Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
 	OnError pulumi.StringPtrInput
+	// The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
+	Plugin pulumi.StringPtrInput
 	// Ordering priority within a stage. Defaults to 0.
 	Priority pulumi.IntPtrInput
 	// Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
 	Prompt pulumi.StringPtrInput
 	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
 	Settings pulumi.StringPtrInput
-	// Unix socket path to the hook process. Exactly one of socket or webhook.
-	Socket pulumi.StringPtrInput
 	// Per-call timeout in milliseconds. Defaults to 1.
 	TimeoutMs pulumi.IntPtrInput
 	// Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
 	User pulumi.StringPtrInput
-	// Webhook URL for the hook. Exactly one of socket or webhook.
-	Webhook pulumi.StringPtrInput
 }
 
 func (HookState) ElementType() reflect.Type {
@@ -224,20 +222,18 @@ type hookArgs struct {
 	OnEmpty *string `pulumi:"onEmpty"`
 	// Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
 	OnError *string `pulumi:"onError"`
+	// The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
+	Plugin string `pulumi:"plugin"`
 	// Ordering priority within a stage. Defaults to 0.
 	Priority *int `pulumi:"priority"`
 	// Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
 	Prompt *string `pulumi:"prompt"`
 	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
 	Settings *string `pulumi:"settings"`
-	// Unix socket path to the hook process. Exactly one of socket or webhook.
-	Socket *string `pulumi:"socket"`
 	// Per-call timeout in milliseconds. Defaults to 1.
 	TimeoutMs *int `pulumi:"timeoutMs"`
 	// Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
 	User *string `pulumi:"user"`
-	// Webhook URL for the hook. Exactly one of socket or webhook.
-	Webhook *string `pulumi:"webhook"`
 }
 
 // The set of arguments for constructing a Hook resource.
@@ -256,20 +252,18 @@ type HookArgs struct {
 	OnEmpty pulumi.StringPtrInput
 	// Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
 	OnError pulumi.StringPtrInput
+	// The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
+	Plugin pulumi.StringInput
 	// Ordering priority within a stage. Defaults to 0.
 	Priority pulumi.IntPtrInput
 	// Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
 	Prompt pulumi.StringPtrInput
 	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
 	Settings pulumi.StringPtrInput
-	// Unix socket path to the hook process. Exactly one of socket or webhook.
-	Socket pulumi.StringPtrInput
 	// Per-call timeout in milliseconds. Defaults to 1.
 	TimeoutMs pulumi.IntPtrInput
 	// Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
 	User pulumi.StringPtrInput
-	// Webhook URL for the hook. Exactly one of socket or webhook.
-	Webhook pulumi.StringPtrInput
 }
 
 func (HookArgs) ElementType() reflect.Type {
@@ -394,6 +388,11 @@ func (o HookOutput) OnError() pulumi.StringOutput {
 	return o.ApplyT(func(v *Hook) pulumi.StringOutput { return v.OnError }).(pulumi.StringOutput)
 }
 
+// The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
+func (o HookOutput) Plugin() pulumi.StringOutput {
+	return o.ApplyT(func(v *Hook) pulumi.StringOutput { return v.Plugin }).(pulumi.StringOutput)
+}
+
 // Ordering priority within a stage. Defaults to 0.
 func (o HookOutput) Priority() pulumi.IntOutput {
 	return o.ApplyT(func(v *Hook) pulumi.IntOutput { return v.Priority }).(pulumi.IntOutput)
@@ -409,11 +408,6 @@ func (o HookOutput) Settings() pulumi.StringOutput {
 	return o.ApplyT(func(v *Hook) pulumi.StringOutput { return v.Settings }).(pulumi.StringOutput)
 }
 
-// Unix socket path to the hook process. Exactly one of socket or webhook.
-func (o HookOutput) Socket() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v *Hook) pulumi.StringPtrOutput { return v.Socket }).(pulumi.StringPtrOutput)
-}
-
 // Per-call timeout in milliseconds. Defaults to 1.
 func (o HookOutput) TimeoutMs() pulumi.IntOutput {
 	return o.ApplyT(func(v *Hook) pulumi.IntOutput { return v.TimeoutMs }).(pulumi.IntOutput)
@@ -422,11 +416,6 @@ func (o HookOutput) TimeoutMs() pulumi.IntOutput {
 // Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
 func (o HookOutput) User() pulumi.StringOutput {
 	return o.ApplyT(func(v *Hook) pulumi.StringOutput { return v.User }).(pulumi.StringOutput)
-}
-
-// Webhook URL for the hook. Exactly one of socket or webhook.
-func (o HookOutput) Webhook() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v *Hook) pulumi.StringPtrOutput { return v.Webhook }).(pulumi.StringPtrOutput)
 }
 
 type HookArrayOutput struct{ *pulumi.OutputState }

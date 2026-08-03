@@ -20,6 +20,7 @@ __all__ = ['HookArgs', 'Hook']
 class HookArgs:
     def __init__(__self__, *,
                  kind: pulumi.Input[_builtins.str],
+                 plugin: pulumi.Input[_builtins.str],
                  at: pulumi.Input[Optional[_builtins.str]] = None,
                  default: pulumi.Input[Optional[_builtins.bool]] = None,
                  global_: pulumi.Input[Optional[_builtins.bool]] = None,
@@ -29,14 +30,13 @@ class HookArgs:
                  priority: pulumi.Input[Optional[_builtins.int]] = None,
                  prompt: pulumi.Input[Optional[_builtins.str]] = None,
                  settings: pulumi.Input[Optional[_builtins.str]] = None,
-                 socket: pulumi.Input[Optional[_builtins.str]] = None,
                  timeout_ms: pulumi.Input[Optional[_builtins.int]] = None,
-                 user: pulumi.Input[Optional[_builtins.str]] = None,
-                 webhook: pulumi.Input[Optional[_builtins.str]] = None):
+                 user: pulumi.Input[Optional[_builtins.str]] = None):
         """
         The set of arguments for constructing a Hook resource.
 
         :param pulumi.Input[_builtins.str] kind: Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook.
+        :param pulumi.Input[_builtins.str] plugin: The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
         :param pulumi.Input[_builtins.str] at: Pipeline stage: request, route, attempt, or completion. Null lets busbar place it by kind.
         :param pulumi.Input[_builtins.bool] default: Whether this hook is the default for its stage. Write-only (not echoed by reads).
         :param pulumi.Input[_builtins.bool] global_: Whether the hook applies globally (all pools). Defaults to false. May read back true if wired via global_hooks.
@@ -46,12 +46,11 @@ class HookArgs:
         :param pulumi.Input[_builtins.int] priority: Ordering priority within a stage. Defaults to 0.
         :param pulumi.Input[_builtins.str] prompt: Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
         :param pulumi.Input[_builtins.str] settings: Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
-        :param pulumi.Input[_builtins.str] socket: Unix socket path to the hook process. Exactly one of socket or webhook.
         :param pulumi.Input[_builtins.int] timeout_ms: Per-call timeout in milliseconds. Defaults to 1.
         :param pulumi.Input[_builtins.str] user: Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
-        :param pulumi.Input[_builtins.str] webhook: Webhook URL for the hook. Exactly one of socket or webhook.
         """
         pulumi.set(__self__, "kind", kind)
+        pulumi.set(__self__, "plugin", plugin)
         if at is not None:
             pulumi.set(__self__, "at", at)
         if default is not None:
@@ -70,14 +69,10 @@ class HookArgs:
             pulumi.set(__self__, "prompt", prompt)
         if settings is not None:
             pulumi.set(__self__, "settings", settings)
-        if socket is not None:
-            pulumi.set(__self__, "socket", socket)
         if timeout_ms is not None:
             pulumi.set(__self__, "timeout_ms", timeout_ms)
         if user is not None:
             pulumi.set(__self__, "user", user)
-        if webhook is not None:
-            pulumi.set(__self__, "webhook", webhook)
 
     @_builtins.property
     @pulumi.getter
@@ -90,6 +85,18 @@ class HookArgs:
     @kind.setter
     def kind(self, value: pulumi.Input[_builtins.str]):
         pulumi.set(self, "kind", value)
+
+    @_builtins.property
+    @pulumi.getter
+    def plugin(self) -> pulumi.Input[_builtins.str]:
+        """
+        The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
+        """
+        return pulumi.get(self, "plugin")
+
+    @plugin.setter
+    def plugin(self, value: pulumi.Input[_builtins.str]):
+        pulumi.set(self, "plugin", value)
 
     @_builtins.property
     @pulumi.getter
@@ -200,18 +207,6 @@ class HookArgs:
         pulumi.set(self, "settings", value)
 
     @_builtins.property
-    @pulumi.getter
-    def socket(self) -> pulumi.Input[Optional[_builtins.str]]:
-        """
-        Unix socket path to the hook process. Exactly one of socket or webhook.
-        """
-        return pulumi.get(self, "socket")
-
-    @socket.setter
-    def socket(self, value: pulumi.Input[Optional[_builtins.str]]):
-        pulumi.set(self, "socket", value)
-
-    @_builtins.property
     @pulumi.getter(name="timeoutMs")
     def timeout_ms(self) -> pulumi.Input[Optional[_builtins.int]]:
         """
@@ -235,18 +230,6 @@ class HookArgs:
     def user(self, value: pulumi.Input[Optional[_builtins.str]]):
         pulumi.set(self, "user", value)
 
-    @_builtins.property
-    @pulumi.getter
-    def webhook(self) -> pulumi.Input[Optional[_builtins.str]]:
-        """
-        Webhook URL for the hook. Exactly one of socket or webhook.
-        """
-        return pulumi.get(self, "webhook")
-
-    @webhook.setter
-    def webhook(self, value: pulumi.Input[Optional[_builtins.str]]):
-        pulumi.set(self, "webhook", value)
-
 
 @pulumi.input_type
 class _HookState:
@@ -258,13 +241,12 @@ class _HookState:
                  name: pulumi.Input[Optional[_builtins.str]] = None,
                  on_empty: pulumi.Input[Optional[_builtins.str]] = None,
                  on_error: pulumi.Input[Optional[_builtins.str]] = None,
+                 plugin: pulumi.Input[Optional[_builtins.str]] = None,
                  priority: pulumi.Input[Optional[_builtins.int]] = None,
                  prompt: pulumi.Input[Optional[_builtins.str]] = None,
                  settings: pulumi.Input[Optional[_builtins.str]] = None,
-                 socket: pulumi.Input[Optional[_builtins.str]] = None,
                  timeout_ms: pulumi.Input[Optional[_builtins.int]] = None,
-                 user: pulumi.Input[Optional[_builtins.str]] = None,
-                 webhook: pulumi.Input[Optional[_builtins.str]] = None):
+                 user: pulumi.Input[Optional[_builtins.str]] = None):
         """
         Input properties used for looking up and filtering Hook resources.
 
@@ -275,13 +257,12 @@ class _HookState:
         :param pulumi.Input[_builtins.str] name: Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
         :param pulumi.Input[_builtins.str] on_empty: Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
         :param pulumi.Input[_builtins.str] on_error: Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
+        :param pulumi.Input[_builtins.str] plugin: The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
         :param pulumi.Input[_builtins.int] priority: Ordering priority within a stage. Defaults to 0.
         :param pulumi.Input[_builtins.str] prompt: Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
         :param pulumi.Input[_builtins.str] settings: Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
-        :param pulumi.Input[_builtins.str] socket: Unix socket path to the hook process. Exactly one of socket or webhook.
         :param pulumi.Input[_builtins.int] timeout_ms: Per-call timeout in milliseconds. Defaults to 1.
         :param pulumi.Input[_builtins.str] user: Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
-        :param pulumi.Input[_builtins.str] webhook: Webhook URL for the hook. Exactly one of socket or webhook.
         """
         if at is not None:
             pulumi.set(__self__, "at", at)
@@ -297,20 +278,18 @@ class _HookState:
             pulumi.set(__self__, "on_empty", on_empty)
         if on_error is not None:
             pulumi.set(__self__, "on_error", on_error)
+        if plugin is not None:
+            pulumi.set(__self__, "plugin", plugin)
         if priority is not None:
             pulumi.set(__self__, "priority", priority)
         if prompt is not None:
             pulumi.set(__self__, "prompt", prompt)
         if settings is not None:
             pulumi.set(__self__, "settings", settings)
-        if socket is not None:
-            pulumi.set(__self__, "socket", socket)
         if timeout_ms is not None:
             pulumi.set(__self__, "timeout_ms", timeout_ms)
         if user is not None:
             pulumi.set(__self__, "user", user)
-        if webhook is not None:
-            pulumi.set(__self__, "webhook", webhook)
 
     @_builtins.property
     @pulumi.getter
@@ -398,6 +377,18 @@ class _HookState:
 
     @_builtins.property
     @pulumi.getter
+    def plugin(self) -> pulumi.Input[Optional[_builtins.str]]:
+        """
+        The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
+        """
+        return pulumi.get(self, "plugin")
+
+    @plugin.setter
+    def plugin(self, value: pulumi.Input[Optional[_builtins.str]]):
+        pulumi.set(self, "plugin", value)
+
+    @_builtins.property
+    @pulumi.getter
     def priority(self) -> pulumi.Input[Optional[_builtins.int]]:
         """
         Ordering priority within a stage. Defaults to 0.
@@ -433,18 +424,6 @@ class _HookState:
         pulumi.set(self, "settings", value)
 
     @_builtins.property
-    @pulumi.getter
-    def socket(self) -> pulumi.Input[Optional[_builtins.str]]:
-        """
-        Unix socket path to the hook process. Exactly one of socket or webhook.
-        """
-        return pulumi.get(self, "socket")
-
-    @socket.setter
-    def socket(self, value: pulumi.Input[Optional[_builtins.str]]):
-        pulumi.set(self, "socket", value)
-
-    @_builtins.property
     @pulumi.getter(name="timeoutMs")
     def timeout_ms(self) -> pulumi.Input[Optional[_builtins.int]]:
         """
@@ -468,18 +447,6 @@ class _HookState:
     def user(self, value: pulumi.Input[Optional[_builtins.str]]):
         pulumi.set(self, "user", value)
 
-    @_builtins.property
-    @pulumi.getter
-    def webhook(self) -> pulumi.Input[Optional[_builtins.str]]:
-        """
-        Webhook URL for the hook. Exactly one of socket or webhook.
-        """
-        return pulumi.get(self, "webhook")
-
-    @webhook.setter
-    def webhook(self, value: pulumi.Input[Optional[_builtins.str]]):
-        pulumi.set(self, "webhook", value)
-
 
 @pulumi.type_token("busbar:index/hook:Hook")
 class Hook(pulumi.CustomResource):
@@ -494,16 +461,15 @@ class Hook(pulumi.CustomResource):
                  name: pulumi.Input[Optional[_builtins.str]] = None,
                  on_empty: pulumi.Input[Optional[_builtins.str]] = None,
                  on_error: pulumi.Input[Optional[_builtins.str]] = None,
+                 plugin: pulumi.Input[Optional[_builtins.str]] = None,
                  priority: pulumi.Input[Optional[_builtins.int]] = None,
                  prompt: pulumi.Input[Optional[_builtins.str]] = None,
                  settings: pulumi.Input[Optional[_builtins.str]] = None,
-                 socket: pulumi.Input[Optional[_builtins.str]] = None,
                  timeout_ms: pulumi.Input[Optional[_builtins.int]] = None,
                  user: pulumi.Input[Optional[_builtins.str]] = None,
-                 webhook: pulumi.Input[Optional[_builtins.str]] = None,
                  __props__=None):
         """
-        A routing hook: an external tap or gate reached over a unix socket or webhook, wired into busbar's request/ranking pipeline (POST/GET/PUT/DELETE /api/v1/admin/hooks). Exactly one of socket or webhook must be set. The grant fields (kind, prompt, user) are immutable once registered — changing them replaces the hook.
+        A routing hook (busbar >= 1.5.0): a tap or gate backed by a signed `kind: hook` plugin, wired into busbar's request/ranking pipeline (POST/GET/PUT/DELETE /api/v1/admin/hooks). The grant fields (kind, prompt, user) are immutable once registered — changing them replaces the hook.
 
         ## Example Usage
 
@@ -512,12 +478,13 @@ class Hook(pulumi.CustomResource):
         import json
         import pulumi_busbar as busbar
 
-        # Register a blocking "gate" hook reached over a webhook: it may inspect
-        # (prompt = "ro") and rerank candidates before the request is dispatched.
+        # Register a blocking "gate" hook backed by a signed `kind: hook` plugin from
+        # the gateway's plugin catalog: it may inspect (prompt = "ro") and rerank
+        # candidates before the request is dispatched.
         ranker = busbar.Hook("ranker",
             name="quality-ranker",
             kind="gate",
-            webhook="https://ranker.internal.example/rank",
+            plugin="ranking",
             prompt="ro",
             timeout_ms=100,
             priority=10,
@@ -525,11 +492,11 @@ class Hook(pulumi.CustomResource):
             settings=json.dumps({
                 "min_score": 0.6,
             }))
-        # A fire-and-forget "tap" hook over a unix socket for async usage telemetry.
+        # A fire-and-forget "tap" hook for async usage telemetry.
         usage_tap = busbar.Hook("usage_tap",
             name="usage-telemetry",
             kind="tap",
-            socket="/run/busbar/usage.sock",
+            plugin="usage-telemetry",
             at="completion",
             global_=True)
         ```
@@ -554,13 +521,12 @@ class Hook(pulumi.CustomResource):
         :param pulumi.Input[_builtins.str] name: Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
         :param pulumi.Input[_builtins.str] on_empty: Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
         :param pulumi.Input[_builtins.str] on_error: Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
+        :param pulumi.Input[_builtins.str] plugin: The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
         :param pulumi.Input[_builtins.int] priority: Ordering priority within a stage. Defaults to 0.
         :param pulumi.Input[_builtins.str] prompt: Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
         :param pulumi.Input[_builtins.str] settings: Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
-        :param pulumi.Input[_builtins.str] socket: Unix socket path to the hook process. Exactly one of socket or webhook.
         :param pulumi.Input[_builtins.int] timeout_ms: Per-call timeout in milliseconds. Defaults to 1.
         :param pulumi.Input[_builtins.str] user: Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
-        :param pulumi.Input[_builtins.str] webhook: Webhook URL for the hook. Exactly one of socket or webhook.
         """
         ...
     @overload
@@ -569,7 +535,7 @@ class Hook(pulumi.CustomResource):
                  args: HookArgs,
                  opts: Optional[pulumi.ResourceOptions] = None):
         """
-        A routing hook: an external tap or gate reached over a unix socket or webhook, wired into busbar's request/ranking pipeline (POST/GET/PUT/DELETE /api/v1/admin/hooks). Exactly one of socket or webhook must be set. The grant fields (kind, prompt, user) are immutable once registered — changing them replaces the hook.
+        A routing hook (busbar >= 1.5.0): a tap or gate backed by a signed `kind: hook` plugin, wired into busbar's request/ranking pipeline (POST/GET/PUT/DELETE /api/v1/admin/hooks). The grant fields (kind, prompt, user) are immutable once registered — changing them replaces the hook.
 
         ## Example Usage
 
@@ -578,12 +544,13 @@ class Hook(pulumi.CustomResource):
         import json
         import pulumi_busbar as busbar
 
-        # Register a blocking "gate" hook reached over a webhook: it may inspect
-        # (prompt = "ro") and rerank candidates before the request is dispatched.
+        # Register a blocking "gate" hook backed by a signed `kind: hook` plugin from
+        # the gateway's plugin catalog: it may inspect (prompt = "ro") and rerank
+        # candidates before the request is dispatched.
         ranker = busbar.Hook("ranker",
             name="quality-ranker",
             kind="gate",
-            webhook="https://ranker.internal.example/rank",
+            plugin="ranking",
             prompt="ro",
             timeout_ms=100,
             priority=10,
@@ -591,11 +558,11 @@ class Hook(pulumi.CustomResource):
             settings=json.dumps({
                 "min_score": 0.6,
             }))
-        # A fire-and-forget "tap" hook over a unix socket for async usage telemetry.
+        # A fire-and-forget "tap" hook for async usage telemetry.
         usage_tap = busbar.Hook("usage_tap",
             name="usage-telemetry",
             kind="tap",
-            socket="/run/busbar/usage.sock",
+            plugin="usage-telemetry",
             at="completion",
             global_=True)
         ```
@@ -633,13 +600,12 @@ class Hook(pulumi.CustomResource):
                  name: pulumi.Input[Optional[_builtins.str]] = None,
                  on_empty: pulumi.Input[Optional[_builtins.str]] = None,
                  on_error: pulumi.Input[Optional[_builtins.str]] = None,
+                 plugin: pulumi.Input[Optional[_builtins.str]] = None,
                  priority: pulumi.Input[Optional[_builtins.int]] = None,
                  prompt: pulumi.Input[Optional[_builtins.str]] = None,
                  settings: pulumi.Input[Optional[_builtins.str]] = None,
-                 socket: pulumi.Input[Optional[_builtins.str]] = None,
                  timeout_ms: pulumi.Input[Optional[_builtins.int]] = None,
                  user: pulumi.Input[Optional[_builtins.str]] = None,
-                 webhook: pulumi.Input[Optional[_builtins.str]] = None,
                  __props__=None):
         opts = pulumi.ResourceOptions.merge(_utilities.get_resource_opts_defaults(), opts)
         if not isinstance(opts, pulumi.ResourceOptions):
@@ -658,13 +624,14 @@ class Hook(pulumi.CustomResource):
             __props__.__dict__["name"] = name
             __props__.__dict__["on_empty"] = on_empty
             __props__.__dict__["on_error"] = on_error
+            if plugin is None and not opts.urn:
+                raise TypeError("Missing required property 'plugin'")
+            __props__.__dict__["plugin"] = plugin
             __props__.__dict__["priority"] = priority
             __props__.__dict__["prompt"] = prompt
             __props__.__dict__["settings"] = settings
-            __props__.__dict__["socket"] = socket
             __props__.__dict__["timeout_ms"] = timeout_ms
             __props__.__dict__["user"] = user
-            __props__.__dict__["webhook"] = webhook
         super(Hook, __self__).__init__(
             'busbar:index/hook:Hook',
             resource_name,
@@ -682,13 +649,12 @@ class Hook(pulumi.CustomResource):
             name: pulumi.Input[Optional[_builtins.str]] = None,
             on_empty: pulumi.Input[Optional[_builtins.str]] = None,
             on_error: pulumi.Input[Optional[_builtins.str]] = None,
+            plugin: pulumi.Input[Optional[_builtins.str]] = None,
             priority: pulumi.Input[Optional[_builtins.int]] = None,
             prompt: pulumi.Input[Optional[_builtins.str]] = None,
             settings: pulumi.Input[Optional[_builtins.str]] = None,
-            socket: pulumi.Input[Optional[_builtins.str]] = None,
             timeout_ms: pulumi.Input[Optional[_builtins.int]] = None,
-            user: pulumi.Input[Optional[_builtins.str]] = None,
-            webhook: pulumi.Input[Optional[_builtins.str]] = None) -> 'Hook':
+            user: pulumi.Input[Optional[_builtins.str]] = None) -> 'Hook':
         """
         Get an existing Hook resource's state with the given name, id, and optional extra
         properties used to qualify the lookup.
@@ -703,13 +669,12 @@ class Hook(pulumi.CustomResource):
         :param pulumi.Input[_builtins.str] name: Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
         :param pulumi.Input[_builtins.str] on_empty: Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
         :param pulumi.Input[_builtins.str] on_error: Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
+        :param pulumi.Input[_builtins.str] plugin: The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
         :param pulumi.Input[_builtins.int] priority: Ordering priority within a stage. Defaults to 0.
         :param pulumi.Input[_builtins.str] prompt: Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
         :param pulumi.Input[_builtins.str] settings: Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
-        :param pulumi.Input[_builtins.str] socket: Unix socket path to the hook process. Exactly one of socket or webhook.
         :param pulumi.Input[_builtins.int] timeout_ms: Per-call timeout in milliseconds. Defaults to 1.
         :param pulumi.Input[_builtins.str] user: Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
-        :param pulumi.Input[_builtins.str] webhook: Webhook URL for the hook. Exactly one of socket or webhook.
         """
         opts = pulumi.ResourceOptions.merge(opts, pulumi.ResourceOptions(id=id))
 
@@ -722,13 +687,12 @@ class Hook(pulumi.CustomResource):
         __props__.__dict__["name"] = name
         __props__.__dict__["on_empty"] = on_empty
         __props__.__dict__["on_error"] = on_error
+        __props__.__dict__["plugin"] = plugin
         __props__.__dict__["priority"] = priority
         __props__.__dict__["prompt"] = prompt
         __props__.__dict__["settings"] = settings
-        __props__.__dict__["socket"] = socket
         __props__.__dict__["timeout_ms"] = timeout_ms
         __props__.__dict__["user"] = user
-        __props__.__dict__["webhook"] = webhook
         return Hook(resource_name, opts=opts, __props__=__props__)
 
     @_builtins.property
@@ -789,6 +753,14 @@ class Hook(pulumi.CustomResource):
 
     @_builtins.property
     @pulumi.getter
+    def plugin(self) -> pulumi.Output[_builtins.str]:
+        """
+        The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
+        """
+        return pulumi.get(self, "plugin")
+
+    @_builtins.property
+    @pulumi.getter
     def priority(self) -> pulumi.Output[_builtins.int]:
         """
         Ordering priority within a stage. Defaults to 0.
@@ -812,14 +784,6 @@ class Hook(pulumi.CustomResource):
         return pulumi.get(self, "settings")
 
     @_builtins.property
-    @pulumi.getter
-    def socket(self) -> pulumi.Output[Optional[_builtins.str]]:
-        """
-        Unix socket path to the hook process. Exactly one of socket or webhook.
-        """
-        return pulumi.get(self, "socket")
-
-    @_builtins.property
     @pulumi.getter(name="timeoutMs")
     def timeout_ms(self) -> pulumi.Output[_builtins.int]:
         """
@@ -834,12 +798,4 @@ class Hook(pulumi.CustomResource):
         Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
         """
         return pulumi.get(self, "user")
-
-    @_builtins.property
-    @pulumi.getter
-    def webhook(self) -> pulumi.Output[Optional[_builtins.str]]:
-        """
-        Webhook URL for the hook. Exactly one of socket or webhook.
-        """
-        return pulumi.get(self, "webhook")
 

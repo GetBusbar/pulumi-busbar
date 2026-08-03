@@ -11,7 +11,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-// A governance virtual key: a mintable, revocable credential with budget and rate caps scoped to a set of pools (POST/GET/PATCH/DELETE /api/v1/admin/keys). The plaintext secret is returned by busbar only once, at creation, and is stored in state as a sensitive value; refreshes update metadata (budget/limits/enabled) but never the secret. Requires `governance:` to be enabled on the gateway.
+// A governance virtual key (busbar >= 1.5.0): a mintable, revocable, EXPIRING signed-token credential, optionally bound to a `groups:` bucket that carries all budget and rate enforcement (POST/GET/PATCH/DELETE /api/v1/admin/keys). The signed token is returned by busbar only once, at creation, and is stored in state as a sensitive value; refreshes update metadata (group/enabled/state) but never the token. Requires governance to be enabled on the gateway.
 //
 // ## Example Usage
 //
@@ -27,23 +27,25 @@ import (
 //
 //	func main() {
 //		pulumi.Run(func(ctx *pulumi.Context) error {
-//			// Mint a governance virtual key with a daily budget and a request-rate cap,
-//			// scoped to the "smart" pool. The plaintext secret is returned only once, at
-//			// creation, and stored in state as a sensitive value.
+//			// Mint a governance virtual key (busbar >= 1.5.0): a signed, expiring token,
+//			// bound to a `groups:` bucket that carries all budget/rate enforcement, scoped
+//			// to the "smart" pool. The signed token is returned only once, at creation, and
+//			// stored in state as a sensitive value.
 //			app, err := busbar.NewVirtualKey(ctx, "app", &busbar.VirtualKeyArgs{
-//				Name:           pulumi.String("checkout-service"),
-//				BudgetPeriod:   pulumi.String("daily"),
-//				MaxBudgetCents: pulumi.Int(5000),
-//				RpmLimit:       pulumi.Int(60),
-//				TpmLimit:       pulumi.Int(200000),
+//				Name:  pulumi.String("checkout-service"),
+//				Group: pulumi.String("team-checkout"),
 //				AllowedPools: pulumi.StringArray{
 //					pulumi.String("smart"),
+//				},
+//				ExpiresIn: pulumi.String("30d"),
+//				Labels: pulumi.StringMap{
+//					"service": pulumi.String("checkout"),
 //				},
 //			})
 //			if err != nil {
 //				return err
 //			}
-//			ctx.Export("appKeySecret", app.Secret)
+//			ctx.Export("appKeyToken", app.Token)
 //			return nil
 //		})
 //	}
@@ -54,7 +56,7 @@ import (
 //
 // The `pulumi import` command can be used, for example:
 //
-// Virtual keys are imported by their server-assigned id (the plaintext secret
+// Virtual keys are imported by their server-assigned id (the signed token
 // cannot be recovered — it is create-only — and stays null after import).
 //
 // ```sh
@@ -63,30 +65,36 @@ import (
 type VirtualKey struct {
 	pulumi.CustomResourceState
 
-	// Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+	// Pools this key may target. Omitted/null means ALL pools; an explicit empty list means NO pools. Immutable; changing it replaces the key.
 	AllowedPools pulumi.StringArrayOutput `pulumi:"allowedPools"`
 	// AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
 	AwsAccessKeyId pulumi.StringOutput `pulumi:"awsAccessKeyId"`
 	// AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
 	AwsSecretAccessKey pulumi.StringOutput `pulumi:"awsSecretAccessKey"`
-	// Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
-	BudgetPeriod pulumi.StringOutput `pulumi:"budgetPeriod"`
 	// Epoch seconds the key was minted.
 	CreatedAt pulumi.IntOutput `pulumi:"createdAt"`
-	// Whether the key currently resolves. A key is created enabled; disable it out-of-band via the admin API.
+	// Whether the key currently resolves. Defaults to true at mint. Mutable via PATCH (false = reversible disable; the key's `state` reads "disabled").
 	Enabled pulumi.BoolOutput `pulumi:"enabled"`
+	// Token expiry as absolute Unix seconds. May be set at mint (mutually exclusive with `expiresIn`) and is always computed from the mint response. Changing it replaces the key.
+	ExpiresAt pulumi.IntOutput `pulumi:"expiresAt"`
+	// Token lifetime as a duration string (e.g. `7d`, `24h`, `30m`, `3600s`); the token's expiry is mint-time + this. Mutually exclusive with `expiresAt`. Omitting both applies the server default TTL. Write-only mint directive; changing it replaces the key.
+	ExpiresIn pulumi.StringPtrOutput `pulumi:"expiresIn"`
+	// The `groups:` bucket this key binds to (at most one); all budget/rate enforcement flows through the group. The group must already exist unless `parent` is set (auto-provision). Omit for an authed-but-unlimited key. Mutable via PATCH: changing it rebinds, removing it unbinds.
+	Group pulumi.StringPtrOutput `pulumi:"group"`
+	// Whether the mint auto-provisioned its bound group leaf (self-service). Known only at creation.
+	GroupProvisioned pulumi.BoolOutput `pulumi:"groupProvisioned"`
 	// When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
 	IssueAwsCredential pulumi.BoolPtrOutput `pulumi:"issueAwsCredential"`
-	// Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
-	MaxBudgetCents pulumi.IntPtrOutput `pulumi:"maxBudgetCents"`
+	// Mint-time labels echoed onto this key's metric series (Prometheus-safe names; never interpreted by enforcement). Immutable; changing them replaces the key.
+	Labels pulumi.StringMapOutput `pulumi:"labels"`
 	// Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
 	Name pulumi.StringOutput `pulumi:"name"`
-	// Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-	RpmLimit pulumi.IntPtrOutput `pulumi:"rpmLimit"`
-	// The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
-	Secret pulumi.StringOutput `pulumi:"secret"`
-	// Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-	TpmLimit pulumi.IntPtrOutput `pulumi:"tpmLimit"`
+	// Auto-provision target: the EXISTING parent group under which `group` is created as a leaf when it does not yet exist. Write-only mint directive (never echoed by reads). Changing it replaces the key.
+	Parent pulumi.StringPtrOutput `pulumi:"parent"`
+	// Lifecycle state derived by the server: active, disabled, revoked, or tombstoned. A tombstoned/revoked key is treated as gone and planned for recreation.
+	State pulumi.StringOutput `pulumi:"state"`
+	// The busbar-signed bearer token (bbk_...) — the key credential. Returned only at creation; stored in state and never re-read.
+	Token pulumi.StringOutput `pulumi:"token"`
 }
 
 // NewVirtualKey registers a new resource with the given unique name, arguments, and options.
@@ -98,7 +106,7 @@ func NewVirtualKey(ctx *pulumi.Context,
 
 	secrets := pulumi.AdditionalSecretOutputs([]string{
 		"awsSecretAccessKey",
-		"secret",
+		"token",
 	})
 	opts = append(opts, secrets)
 	opts = internal.PkgResourceDefaultOpts(opts)
@@ -124,57 +132,69 @@ func GetVirtualKey(ctx *pulumi.Context,
 
 // Input properties used for looking up and filtering VirtualKey resources.
 type virtualKeyState struct {
-	// Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+	// Pools this key may target. Omitted/null means ALL pools; an explicit empty list means NO pools. Immutable; changing it replaces the key.
 	AllowedPools []string `pulumi:"allowedPools"`
 	// AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
 	AwsAccessKeyId *string `pulumi:"awsAccessKeyId"`
 	// AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
 	AwsSecretAccessKey *string `pulumi:"awsSecretAccessKey"`
-	// Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
-	BudgetPeriod *string `pulumi:"budgetPeriod"`
 	// Epoch seconds the key was minted.
 	CreatedAt *int `pulumi:"createdAt"`
-	// Whether the key currently resolves. A key is created enabled; disable it out-of-band via the admin API.
+	// Whether the key currently resolves. Defaults to true at mint. Mutable via PATCH (false = reversible disable; the key's `state` reads "disabled").
 	Enabled *bool `pulumi:"enabled"`
+	// Token expiry as absolute Unix seconds. May be set at mint (mutually exclusive with `expiresIn`) and is always computed from the mint response. Changing it replaces the key.
+	ExpiresAt *int `pulumi:"expiresAt"`
+	// Token lifetime as a duration string (e.g. `7d`, `24h`, `30m`, `3600s`); the token's expiry is mint-time + this. Mutually exclusive with `expiresAt`. Omitting both applies the server default TTL. Write-only mint directive; changing it replaces the key.
+	ExpiresIn *string `pulumi:"expiresIn"`
+	// The `groups:` bucket this key binds to (at most one); all budget/rate enforcement flows through the group. The group must already exist unless `parent` is set (auto-provision). Omit for an authed-but-unlimited key. Mutable via PATCH: changing it rebinds, removing it unbinds.
+	Group *string `pulumi:"group"`
+	// Whether the mint auto-provisioned its bound group leaf (self-service). Known only at creation.
+	GroupProvisioned *bool `pulumi:"groupProvisioned"`
 	// When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
 	IssueAwsCredential *bool `pulumi:"issueAwsCredential"`
-	// Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
-	MaxBudgetCents *int `pulumi:"maxBudgetCents"`
+	// Mint-time labels echoed onto this key's metric series (Prometheus-safe names; never interpreted by enforcement). Immutable; changing them replaces the key.
+	Labels map[string]string `pulumi:"labels"`
 	// Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
 	Name *string `pulumi:"name"`
-	// Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-	RpmLimit *int `pulumi:"rpmLimit"`
-	// The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
-	Secret *string `pulumi:"secret"`
-	// Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-	TpmLimit *int `pulumi:"tpmLimit"`
+	// Auto-provision target: the EXISTING parent group under which `group` is created as a leaf when it does not yet exist. Write-only mint directive (never echoed by reads). Changing it replaces the key.
+	Parent *string `pulumi:"parent"`
+	// Lifecycle state derived by the server: active, disabled, revoked, or tombstoned. A tombstoned/revoked key is treated as gone and planned for recreation.
+	State *string `pulumi:"state"`
+	// The busbar-signed bearer token (bbk_...) — the key credential. Returned only at creation; stored in state and never re-read.
+	Token *string `pulumi:"token"`
 }
 
 type VirtualKeyState struct {
-	// Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+	// Pools this key may target. Omitted/null means ALL pools; an explicit empty list means NO pools. Immutable; changing it replaces the key.
 	AllowedPools pulumi.StringArrayInput
 	// AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
 	AwsAccessKeyId pulumi.StringPtrInput
 	// AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
 	AwsSecretAccessKey pulumi.StringPtrInput
-	// Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
-	BudgetPeriod pulumi.StringPtrInput
 	// Epoch seconds the key was minted.
 	CreatedAt pulumi.IntPtrInput
-	// Whether the key currently resolves. A key is created enabled; disable it out-of-band via the admin API.
+	// Whether the key currently resolves. Defaults to true at mint. Mutable via PATCH (false = reversible disable; the key's `state` reads "disabled").
 	Enabled pulumi.BoolPtrInput
+	// Token expiry as absolute Unix seconds. May be set at mint (mutually exclusive with `expiresIn`) and is always computed from the mint response. Changing it replaces the key.
+	ExpiresAt pulumi.IntPtrInput
+	// Token lifetime as a duration string (e.g. `7d`, `24h`, `30m`, `3600s`); the token's expiry is mint-time + this. Mutually exclusive with `expiresAt`. Omitting both applies the server default TTL. Write-only mint directive; changing it replaces the key.
+	ExpiresIn pulumi.StringPtrInput
+	// The `groups:` bucket this key binds to (at most one); all budget/rate enforcement flows through the group. The group must already exist unless `parent` is set (auto-provision). Omit for an authed-but-unlimited key. Mutable via PATCH: changing it rebinds, removing it unbinds.
+	Group pulumi.StringPtrInput
+	// Whether the mint auto-provisioned its bound group leaf (self-service). Known only at creation.
+	GroupProvisioned pulumi.BoolPtrInput
 	// When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
 	IssueAwsCredential pulumi.BoolPtrInput
-	// Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
-	MaxBudgetCents pulumi.IntPtrInput
+	// Mint-time labels echoed onto this key's metric series (Prometheus-safe names; never interpreted by enforcement). Immutable; changing them replaces the key.
+	Labels pulumi.StringMapInput
 	// Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
 	Name pulumi.StringPtrInput
-	// Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-	RpmLimit pulumi.IntPtrInput
-	// The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
-	Secret pulumi.StringPtrInput
-	// Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-	TpmLimit pulumi.IntPtrInput
+	// Auto-provision target: the EXISTING parent group under which `group` is created as a leaf when it does not yet exist. Write-only mint directive (never echoed by reads). Changing it replaces the key.
+	Parent pulumi.StringPtrInput
+	// Lifecycle state derived by the server: active, disabled, revoked, or tombstoned. A tombstoned/revoked key is treated as gone and planned for recreation.
+	State pulumi.StringPtrInput
+	// The busbar-signed bearer token (bbk_...) — the key credential. Returned only at creation; stored in state and never re-read.
+	Token pulumi.StringPtrInput
 }
 
 func (VirtualKeyState) ElementType() reflect.Type {
@@ -182,38 +202,46 @@ func (VirtualKeyState) ElementType() reflect.Type {
 }
 
 type virtualKeyArgs struct {
-	// Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+	// Pools this key may target. Omitted/null means ALL pools; an explicit empty list means NO pools. Immutable; changing it replaces the key.
 	AllowedPools []string `pulumi:"allowedPools"`
-	// Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
-	BudgetPeriod *string `pulumi:"budgetPeriod"`
+	// Whether the key currently resolves. Defaults to true at mint. Mutable via PATCH (false = reversible disable; the key's `state` reads "disabled").
+	Enabled *bool `pulumi:"enabled"`
+	// Token expiry as absolute Unix seconds. May be set at mint (mutually exclusive with `expiresIn`) and is always computed from the mint response. Changing it replaces the key.
+	ExpiresAt *int `pulumi:"expiresAt"`
+	// Token lifetime as a duration string (e.g. `7d`, `24h`, `30m`, `3600s`); the token's expiry is mint-time + this. Mutually exclusive with `expiresAt`. Omitting both applies the server default TTL. Write-only mint directive; changing it replaces the key.
+	ExpiresIn *string `pulumi:"expiresIn"`
+	// The `groups:` bucket this key binds to (at most one); all budget/rate enforcement flows through the group. The group must already exist unless `parent` is set (auto-provision). Omit for an authed-but-unlimited key. Mutable via PATCH: changing it rebinds, removing it unbinds.
+	Group *string `pulumi:"group"`
 	// When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
 	IssueAwsCredential *bool `pulumi:"issueAwsCredential"`
-	// Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
-	MaxBudgetCents *int `pulumi:"maxBudgetCents"`
+	// Mint-time labels echoed onto this key's metric series (Prometheus-safe names; never interpreted by enforcement). Immutable; changing them replaces the key.
+	Labels map[string]string `pulumi:"labels"`
 	// Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
 	Name *string `pulumi:"name"`
-	// Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-	RpmLimit *int `pulumi:"rpmLimit"`
-	// Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-	TpmLimit *int `pulumi:"tpmLimit"`
+	// Auto-provision target: the EXISTING parent group under which `group` is created as a leaf when it does not yet exist. Write-only mint directive (never echoed by reads). Changing it replaces the key.
+	Parent *string `pulumi:"parent"`
 }
 
 // The set of arguments for constructing a VirtualKey resource.
 type VirtualKeyArgs struct {
-	// Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+	// Pools this key may target. Omitted/null means ALL pools; an explicit empty list means NO pools. Immutable; changing it replaces the key.
 	AllowedPools pulumi.StringArrayInput
-	// Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
-	BudgetPeriod pulumi.StringPtrInput
+	// Whether the key currently resolves. Defaults to true at mint. Mutable via PATCH (false = reversible disable; the key's `state` reads "disabled").
+	Enabled pulumi.BoolPtrInput
+	// Token expiry as absolute Unix seconds. May be set at mint (mutually exclusive with `expiresIn`) and is always computed from the mint response. Changing it replaces the key.
+	ExpiresAt pulumi.IntPtrInput
+	// Token lifetime as a duration string (e.g. `7d`, `24h`, `30m`, `3600s`); the token's expiry is mint-time + this. Mutually exclusive with `expiresAt`. Omitting both applies the server default TTL. Write-only mint directive; changing it replaces the key.
+	ExpiresIn pulumi.StringPtrInput
+	// The `groups:` bucket this key binds to (at most one); all budget/rate enforcement flows through the group. The group must already exist unless `parent` is set (auto-provision). Omit for an authed-but-unlimited key. Mutable via PATCH: changing it rebinds, removing it unbinds.
+	Group pulumi.StringPtrInput
 	// When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
 	IssueAwsCredential pulumi.BoolPtrInput
-	// Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
-	MaxBudgetCents pulumi.IntPtrInput
+	// Mint-time labels echoed onto this key's metric series (Prometheus-safe names; never interpreted by enforcement). Immutable; changing them replaces the key.
+	Labels pulumi.StringMapInput
 	// Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
 	Name pulumi.StringPtrInput
-	// Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-	RpmLimit pulumi.IntPtrInput
-	// Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-	TpmLimit pulumi.IntPtrInput
+	// Auto-provision target: the EXISTING parent group under which `group` is created as a leaf when it does not yet exist. Write-only mint directive (never echoed by reads). Changing it replaces the key.
+	Parent pulumi.StringPtrInput
 }
 
 func (VirtualKeyArgs) ElementType() reflect.Type {
@@ -303,7 +331,7 @@ func (o VirtualKeyOutput) ToVirtualKeyOutputWithContext(ctx context.Context) Vir
 	return o
 }
 
-// Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+// Pools this key may target. Omitted/null means ALL pools; an explicit empty list means NO pools. Immutable; changing it replaces the key.
 func (o VirtualKeyOutput) AllowedPools() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.StringArrayOutput { return v.AllowedPools }).(pulumi.StringArrayOutput)
 }
@@ -318,19 +346,34 @@ func (o VirtualKeyOutput) AwsSecretAccessKey() pulumi.StringOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.StringOutput { return v.AwsSecretAccessKey }).(pulumi.StringOutput)
 }
 
-// Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
-func (o VirtualKeyOutput) BudgetPeriod() pulumi.StringOutput {
-	return o.ApplyT(func(v *VirtualKey) pulumi.StringOutput { return v.BudgetPeriod }).(pulumi.StringOutput)
-}
-
 // Epoch seconds the key was minted.
 func (o VirtualKeyOutput) CreatedAt() pulumi.IntOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.IntOutput { return v.CreatedAt }).(pulumi.IntOutput)
 }
 
-// Whether the key currently resolves. A key is created enabled; disable it out-of-band via the admin API.
+// Whether the key currently resolves. Defaults to true at mint. Mutable via PATCH (false = reversible disable; the key's `state` reads "disabled").
 func (o VirtualKeyOutput) Enabled() pulumi.BoolOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.BoolOutput { return v.Enabled }).(pulumi.BoolOutput)
+}
+
+// Token expiry as absolute Unix seconds. May be set at mint (mutually exclusive with `expiresIn`) and is always computed from the mint response. Changing it replaces the key.
+func (o VirtualKeyOutput) ExpiresAt() pulumi.IntOutput {
+	return o.ApplyT(func(v *VirtualKey) pulumi.IntOutput { return v.ExpiresAt }).(pulumi.IntOutput)
+}
+
+// Token lifetime as a duration string (e.g. `7d`, `24h`, `30m`, `3600s`); the token's expiry is mint-time + this. Mutually exclusive with `expiresAt`. Omitting both applies the server default TTL. Write-only mint directive; changing it replaces the key.
+func (o VirtualKeyOutput) ExpiresIn() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *VirtualKey) pulumi.StringPtrOutput { return v.ExpiresIn }).(pulumi.StringPtrOutput)
+}
+
+// The `groups:` bucket this key binds to (at most one); all budget/rate enforcement flows through the group. The group must already exist unless `parent` is set (auto-provision). Omit for an authed-but-unlimited key. Mutable via PATCH: changing it rebinds, removing it unbinds.
+func (o VirtualKeyOutput) Group() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *VirtualKey) pulumi.StringPtrOutput { return v.Group }).(pulumi.StringPtrOutput)
+}
+
+// Whether the mint auto-provisioned its bound group leaf (self-service). Known only at creation.
+func (o VirtualKeyOutput) GroupProvisioned() pulumi.BoolOutput {
+	return o.ApplyT(func(v *VirtualKey) pulumi.BoolOutput { return v.GroupProvisioned }).(pulumi.BoolOutput)
 }
 
 // When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
@@ -338,9 +381,9 @@ func (o VirtualKeyOutput) IssueAwsCredential() pulumi.BoolPtrOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.BoolPtrOutput { return v.IssueAwsCredential }).(pulumi.BoolPtrOutput)
 }
 
-// Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
-func (o VirtualKeyOutput) MaxBudgetCents() pulumi.IntPtrOutput {
-	return o.ApplyT(func(v *VirtualKey) pulumi.IntPtrOutput { return v.MaxBudgetCents }).(pulumi.IntPtrOutput)
+// Mint-time labels echoed onto this key's metric series (Prometheus-safe names; never interpreted by enforcement). Immutable; changing them replaces the key.
+func (o VirtualKeyOutput) Labels() pulumi.StringMapOutput {
+	return o.ApplyT(func(v *VirtualKey) pulumi.StringMapOutput { return v.Labels }).(pulumi.StringMapOutput)
 }
 
 // Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
@@ -348,19 +391,19 @@ func (o VirtualKeyOutput) Name() pulumi.StringOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.StringOutput { return v.Name }).(pulumi.StringOutput)
 }
 
-// Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-func (o VirtualKeyOutput) RpmLimit() pulumi.IntPtrOutput {
-	return o.ApplyT(func(v *VirtualKey) pulumi.IntPtrOutput { return v.RpmLimit }).(pulumi.IntPtrOutput)
+// Auto-provision target: the EXISTING parent group under which `group` is created as a leaf when it does not yet exist. Write-only mint directive (never echoed by reads). Changing it replaces the key.
+func (o VirtualKeyOutput) Parent() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *VirtualKey) pulumi.StringPtrOutput { return v.Parent }).(pulumi.StringPtrOutput)
 }
 
-// The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
-func (o VirtualKeyOutput) Secret() pulumi.StringOutput {
-	return o.ApplyT(func(v *VirtualKey) pulumi.StringOutput { return v.Secret }).(pulumi.StringOutput)
+// Lifecycle state derived by the server: active, disabled, revoked, or tombstoned. A tombstoned/revoked key is treated as gone and planned for recreation.
+func (o VirtualKeyOutput) State() pulumi.StringOutput {
+	return o.ApplyT(func(v *VirtualKey) pulumi.StringOutput { return v.State }).(pulumi.StringOutput)
 }
 
-// Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-func (o VirtualKeyOutput) TpmLimit() pulumi.IntPtrOutput {
-	return o.ApplyT(func(v *VirtualKey) pulumi.IntPtrOutput { return v.TpmLimit }).(pulumi.IntPtrOutput)
+// The busbar-signed bearer token (bbk_...) — the key credential. Returned only at creation; stored in state and never re-read.
+func (o VirtualKeyOutput) Token() pulumi.StringOutput {
+	return o.ApplyT(func(v *VirtualKey) pulumi.StringOutput { return v.Token }).(pulumi.StringOutput)
 }
 
 type VirtualKeyArrayOutput struct{ *pulumi.OutputState }

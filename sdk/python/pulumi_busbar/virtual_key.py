@@ -20,43 +20,51 @@ __all__ = ['VirtualKeyArgs', 'VirtualKey']
 class VirtualKeyArgs:
     def __init__(__self__, *,
                  allowed_pools: pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]] = None,
-                 budget_period: pulumi.Input[Optional[_builtins.str]] = None,
+                 enabled: pulumi.Input[Optional[_builtins.bool]] = None,
+                 expires_at: pulumi.Input[Optional[_builtins.int]] = None,
+                 expires_in: pulumi.Input[Optional[_builtins.str]] = None,
+                 group: pulumi.Input[Optional[_builtins.str]] = None,
                  issue_aws_credential: pulumi.Input[Optional[_builtins.bool]] = None,
-                 max_budget_cents: pulumi.Input[Optional[_builtins.int]] = None,
+                 labels: pulumi.Input[Optional[Mapping[str, pulumi.Input[_builtins.str]]]] = None,
                  name: pulumi.Input[Optional[_builtins.str]] = None,
-                 rpm_limit: pulumi.Input[Optional[_builtins.int]] = None,
-                 tpm_limit: pulumi.Input[Optional[_builtins.int]] = None):
+                 parent: pulumi.Input[Optional[_builtins.str]] = None):
         """
         The set of arguments for constructing a VirtualKey resource.
 
-        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
-        :param pulumi.Input[_builtins.str] budget_period: Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Omitted/null means ALL pools; an explicit empty list means NO pools. Immutable; changing it replaces the key.
+        :param pulumi.Input[_builtins.bool] enabled: Whether the key currently resolves. Defaults to true at mint. Mutable via PATCH (false = reversible disable; the key's `state` reads "disabled").
+        :param pulumi.Input[_builtins.int] expires_at: Token expiry as absolute Unix seconds. May be set at mint (mutually exclusive with `expires_in`) and is always computed from the mint response. Changing it replaces the key.
+        :param pulumi.Input[_builtins.str] expires_in: Token lifetime as a duration string (e.g. `7d`, `24h`, `30m`, `3600s`); the token's expiry is mint-time + this. Mutually exclusive with `expires_at`. Omitting both applies the server default TTL. Write-only mint directive; changing it replaces the key.
+        :param pulumi.Input[_builtins.str] group: The `groups:` bucket this key binds to (at most one); all budget/rate enforcement flows through the group. The group must already exist unless `parent` is set (auto-provision). Omit for an authed-but-unlimited key. Mutable via PATCH: changing it rebinds, removing it unbinds.
         :param pulumi.Input[_builtins.bool] issue_aws_credential: When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
-        :param pulumi.Input[_builtins.int] max_budget_cents: Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+        :param pulumi.Input[Mapping[str, pulumi.Input[_builtins.str]]] labels: Mint-time labels echoed onto this key's metric series (Prometheus-safe names; never interpreted by enforcement). Immutable; changing them replaces the key.
         :param pulumi.Input[_builtins.str] name: Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
-        :param pulumi.Input[_builtins.int] rpm_limit: Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-        :param pulumi.Input[_builtins.int] tpm_limit: Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        :param pulumi.Input[_builtins.str] parent: Auto-provision target: the EXISTING parent group under which `group` is created as a leaf when it does not yet exist. Write-only mint directive (never echoed by reads). Changing it replaces the key.
         """
         if allowed_pools is not None:
             pulumi.set(__self__, "allowed_pools", allowed_pools)
-        if budget_period is not None:
-            pulumi.set(__self__, "budget_period", budget_period)
+        if enabled is not None:
+            pulumi.set(__self__, "enabled", enabled)
+        if expires_at is not None:
+            pulumi.set(__self__, "expires_at", expires_at)
+        if expires_in is not None:
+            pulumi.set(__self__, "expires_in", expires_in)
+        if group is not None:
+            pulumi.set(__self__, "group", group)
         if issue_aws_credential is not None:
             pulumi.set(__self__, "issue_aws_credential", issue_aws_credential)
-        if max_budget_cents is not None:
-            pulumi.set(__self__, "max_budget_cents", max_budget_cents)
+        if labels is not None:
+            pulumi.set(__self__, "labels", labels)
         if name is not None:
             pulumi.set(__self__, "name", name)
-        if rpm_limit is not None:
-            pulumi.set(__self__, "rpm_limit", rpm_limit)
-        if tpm_limit is not None:
-            pulumi.set(__self__, "tpm_limit", tpm_limit)
+        if parent is not None:
+            pulumi.set(__self__, "parent", parent)
 
     @_builtins.property
     @pulumi.getter(name="allowedPools")
     def allowed_pools(self) -> pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]]:
         """
-        Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+        Pools this key may target. Omitted/null means ALL pools; an explicit empty list means NO pools. Immutable; changing it replaces the key.
         """
         return pulumi.get(self, "allowed_pools")
 
@@ -65,16 +73,52 @@ class VirtualKeyArgs:
         pulumi.set(self, "allowed_pools", value)
 
     @_builtins.property
-    @pulumi.getter(name="budgetPeriod")
-    def budget_period(self) -> pulumi.Input[Optional[_builtins.str]]:
+    @pulumi.getter
+    def enabled(self) -> pulumi.Input[Optional[_builtins.bool]]:
         """
-        Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+        Whether the key currently resolves. Defaults to true at mint. Mutable via PATCH (false = reversible disable; the key's `state` reads "disabled").
         """
-        return pulumi.get(self, "budget_period")
+        return pulumi.get(self, "enabled")
 
-    @budget_period.setter
-    def budget_period(self, value: pulumi.Input[Optional[_builtins.str]]):
-        pulumi.set(self, "budget_period", value)
+    @enabled.setter
+    def enabled(self, value: pulumi.Input[Optional[_builtins.bool]]):
+        pulumi.set(self, "enabled", value)
+
+    @_builtins.property
+    @pulumi.getter(name="expiresAt")
+    def expires_at(self) -> pulumi.Input[Optional[_builtins.int]]:
+        """
+        Token expiry as absolute Unix seconds. May be set at mint (mutually exclusive with `expires_in`) and is always computed from the mint response. Changing it replaces the key.
+        """
+        return pulumi.get(self, "expires_at")
+
+    @expires_at.setter
+    def expires_at(self, value: pulumi.Input[Optional[_builtins.int]]):
+        pulumi.set(self, "expires_at", value)
+
+    @_builtins.property
+    @pulumi.getter(name="expiresIn")
+    def expires_in(self) -> pulumi.Input[Optional[_builtins.str]]:
+        """
+        Token lifetime as a duration string (e.g. `7d`, `24h`, `30m`, `3600s`); the token's expiry is mint-time + this. Mutually exclusive with `expires_at`. Omitting both applies the server default TTL. Write-only mint directive; changing it replaces the key.
+        """
+        return pulumi.get(self, "expires_in")
+
+    @expires_in.setter
+    def expires_in(self, value: pulumi.Input[Optional[_builtins.str]]):
+        pulumi.set(self, "expires_in", value)
+
+    @_builtins.property
+    @pulumi.getter
+    def group(self) -> pulumi.Input[Optional[_builtins.str]]:
+        """
+        The `groups:` bucket this key binds to (at most one); all budget/rate enforcement flows through the group. The group must already exist unless `parent` is set (auto-provision). Omit for an authed-but-unlimited key. Mutable via PATCH: changing it rebinds, removing it unbinds.
+        """
+        return pulumi.get(self, "group")
+
+    @group.setter
+    def group(self, value: pulumi.Input[Optional[_builtins.str]]):
+        pulumi.set(self, "group", value)
 
     @_builtins.property
     @pulumi.getter(name="issueAwsCredential")
@@ -89,16 +133,16 @@ class VirtualKeyArgs:
         pulumi.set(self, "issue_aws_credential", value)
 
     @_builtins.property
-    @pulumi.getter(name="maxBudgetCents")
-    def max_budget_cents(self) -> pulumi.Input[Optional[_builtins.int]]:
+    @pulumi.getter
+    def labels(self) -> pulumi.Input[Optional[Mapping[str, pulumi.Input[_builtins.str]]]]:
         """
-        Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+        Mint-time labels echoed onto this key's metric series (Prometheus-safe names; never interpreted by enforcement). Immutable; changing them replaces the key.
         """
-        return pulumi.get(self, "max_budget_cents")
+        return pulumi.get(self, "labels")
 
-    @max_budget_cents.setter
-    def max_budget_cents(self, value: pulumi.Input[Optional[_builtins.int]]):
-        pulumi.set(self, "max_budget_cents", value)
+    @labels.setter
+    def labels(self, value: pulumi.Input[Optional[Mapping[str, pulumi.Input[_builtins.str]]]]):
+        pulumi.set(self, "labels", value)
 
     @_builtins.property
     @pulumi.getter
@@ -113,28 +157,16 @@ class VirtualKeyArgs:
         pulumi.set(self, "name", value)
 
     @_builtins.property
-    @pulumi.getter(name="rpmLimit")
-    def rpm_limit(self) -> pulumi.Input[Optional[_builtins.int]]:
+    @pulumi.getter
+    def parent(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
-        Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        Auto-provision target: the EXISTING parent group under which `group` is created as a leaf when it does not yet exist. Write-only mint directive (never echoed by reads). Changing it replaces the key.
         """
-        return pulumi.get(self, "rpm_limit")
+        return pulumi.get(self, "parent")
 
-    @rpm_limit.setter
-    def rpm_limit(self, value: pulumi.Input[Optional[_builtins.int]]):
-        pulumi.set(self, "rpm_limit", value)
-
-    @_builtins.property
-    @pulumi.getter(name="tpmLimit")
-    def tpm_limit(self) -> pulumi.Input[Optional[_builtins.int]]:
-        """
-        Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-        """
-        return pulumi.get(self, "tpm_limit")
-
-    @tpm_limit.setter
-    def tpm_limit(self, value: pulumi.Input[Optional[_builtins.int]]):
-        pulumi.set(self, "tpm_limit", value)
+    @parent.setter
+    def parent(self, value: pulumi.Input[Optional[_builtins.str]]):
+        pulumi.set(self, "parent", value)
 
 
 @pulumi.input_type
@@ -143,30 +175,36 @@ class _VirtualKeyState:
                  allowed_pools: pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  aws_access_key_id: pulumi.Input[Optional[_builtins.str]] = None,
                  aws_secret_access_key: pulumi.Input[Optional[_builtins.str]] = None,
-                 budget_period: pulumi.Input[Optional[_builtins.str]] = None,
                  created_at: pulumi.Input[Optional[_builtins.int]] = None,
                  enabled: pulumi.Input[Optional[_builtins.bool]] = None,
+                 expires_at: pulumi.Input[Optional[_builtins.int]] = None,
+                 expires_in: pulumi.Input[Optional[_builtins.str]] = None,
+                 group: pulumi.Input[Optional[_builtins.str]] = None,
+                 group_provisioned: pulumi.Input[Optional[_builtins.bool]] = None,
                  issue_aws_credential: pulumi.Input[Optional[_builtins.bool]] = None,
-                 max_budget_cents: pulumi.Input[Optional[_builtins.int]] = None,
+                 labels: pulumi.Input[Optional[Mapping[str, pulumi.Input[_builtins.str]]]] = None,
                  name: pulumi.Input[Optional[_builtins.str]] = None,
-                 rpm_limit: pulumi.Input[Optional[_builtins.int]] = None,
-                 secret: pulumi.Input[Optional[_builtins.str]] = None,
-                 tpm_limit: pulumi.Input[Optional[_builtins.int]] = None):
+                 parent: pulumi.Input[Optional[_builtins.str]] = None,
+                 state: pulumi.Input[Optional[_builtins.str]] = None,
+                 token: pulumi.Input[Optional[_builtins.str]] = None):
         """
         Input properties used for looking up and filtering VirtualKey resources.
 
-        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Omitted/null means ALL pools; an explicit empty list means NO pools. Immutable; changing it replaces the key.
         :param pulumi.Input[_builtins.str] aws_access_key_id: AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
         :param pulumi.Input[_builtins.str] aws_secret_access_key: AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
-        :param pulumi.Input[_builtins.str] budget_period: Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
         :param pulumi.Input[_builtins.int] created_at: Epoch seconds the key was minted.
-        :param pulumi.Input[_builtins.bool] enabled: Whether the key currently resolves. A key is created enabled; disable it out-of-band via the admin API.
+        :param pulumi.Input[_builtins.bool] enabled: Whether the key currently resolves. Defaults to true at mint. Mutable via PATCH (false = reversible disable; the key's `state` reads "disabled").
+        :param pulumi.Input[_builtins.int] expires_at: Token expiry as absolute Unix seconds. May be set at mint (mutually exclusive with `expires_in`) and is always computed from the mint response. Changing it replaces the key.
+        :param pulumi.Input[_builtins.str] expires_in: Token lifetime as a duration string (e.g. `7d`, `24h`, `30m`, `3600s`); the token's expiry is mint-time + this. Mutually exclusive with `expires_at`. Omitting both applies the server default TTL. Write-only mint directive; changing it replaces the key.
+        :param pulumi.Input[_builtins.str] group: The `groups:` bucket this key binds to (at most one); all budget/rate enforcement flows through the group. The group must already exist unless `parent` is set (auto-provision). Omit for an authed-but-unlimited key. Mutable via PATCH: changing it rebinds, removing it unbinds.
+        :param pulumi.Input[_builtins.bool] group_provisioned: Whether the mint auto-provisioned its bound group leaf (self-service). Known only at creation.
         :param pulumi.Input[_builtins.bool] issue_aws_credential: When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
-        :param pulumi.Input[_builtins.int] max_budget_cents: Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+        :param pulumi.Input[Mapping[str, pulumi.Input[_builtins.str]]] labels: Mint-time labels echoed onto this key's metric series (Prometheus-safe names; never interpreted by enforcement). Immutable; changing them replaces the key.
         :param pulumi.Input[_builtins.str] name: Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
-        :param pulumi.Input[_builtins.int] rpm_limit: Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-        :param pulumi.Input[_builtins.str] secret: The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
-        :param pulumi.Input[_builtins.int] tpm_limit: Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        :param pulumi.Input[_builtins.str] parent: Auto-provision target: the EXISTING parent group under which `group` is created as a leaf when it does not yet exist. Write-only mint directive (never echoed by reads). Changing it replaces the key.
+        :param pulumi.Input[_builtins.str] state: Lifecycle state derived by the server: active, disabled, revoked, or tombstoned. A tombstoned/revoked key is treated as gone and planned for recreation.
+        :param pulumi.Input[_builtins.str] token: The busbar-signed bearer token (bbk_...) — the key credential. Returned only at creation; stored in state and never re-read.
         """
         if allowed_pools is not None:
             pulumi.set(__self__, "allowed_pools", allowed_pools)
@@ -174,30 +212,36 @@ class _VirtualKeyState:
             pulumi.set(__self__, "aws_access_key_id", aws_access_key_id)
         if aws_secret_access_key is not None:
             pulumi.set(__self__, "aws_secret_access_key", aws_secret_access_key)
-        if budget_period is not None:
-            pulumi.set(__self__, "budget_period", budget_period)
         if created_at is not None:
             pulumi.set(__self__, "created_at", created_at)
         if enabled is not None:
             pulumi.set(__self__, "enabled", enabled)
+        if expires_at is not None:
+            pulumi.set(__self__, "expires_at", expires_at)
+        if expires_in is not None:
+            pulumi.set(__self__, "expires_in", expires_in)
+        if group is not None:
+            pulumi.set(__self__, "group", group)
+        if group_provisioned is not None:
+            pulumi.set(__self__, "group_provisioned", group_provisioned)
         if issue_aws_credential is not None:
             pulumi.set(__self__, "issue_aws_credential", issue_aws_credential)
-        if max_budget_cents is not None:
-            pulumi.set(__self__, "max_budget_cents", max_budget_cents)
+        if labels is not None:
+            pulumi.set(__self__, "labels", labels)
         if name is not None:
             pulumi.set(__self__, "name", name)
-        if rpm_limit is not None:
-            pulumi.set(__self__, "rpm_limit", rpm_limit)
-        if secret is not None:
-            pulumi.set(__self__, "secret", secret)
-        if tpm_limit is not None:
-            pulumi.set(__self__, "tpm_limit", tpm_limit)
+        if parent is not None:
+            pulumi.set(__self__, "parent", parent)
+        if state is not None:
+            pulumi.set(__self__, "state", state)
+        if token is not None:
+            pulumi.set(__self__, "token", token)
 
     @_builtins.property
     @pulumi.getter(name="allowedPools")
     def allowed_pools(self) -> pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]]:
         """
-        Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+        Pools this key may target. Omitted/null means ALL pools; an explicit empty list means NO pools. Immutable; changing it replaces the key.
         """
         return pulumi.get(self, "allowed_pools")
 
@@ -230,18 +274,6 @@ class _VirtualKeyState:
         pulumi.set(self, "aws_secret_access_key", value)
 
     @_builtins.property
-    @pulumi.getter(name="budgetPeriod")
-    def budget_period(self) -> pulumi.Input[Optional[_builtins.str]]:
-        """
-        Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
-        """
-        return pulumi.get(self, "budget_period")
-
-    @budget_period.setter
-    def budget_period(self, value: pulumi.Input[Optional[_builtins.str]]):
-        pulumi.set(self, "budget_period", value)
-
-    @_builtins.property
     @pulumi.getter(name="createdAt")
     def created_at(self) -> pulumi.Input[Optional[_builtins.int]]:
         """
@@ -257,13 +289,61 @@ class _VirtualKeyState:
     @pulumi.getter
     def enabled(self) -> pulumi.Input[Optional[_builtins.bool]]:
         """
-        Whether the key currently resolves. A key is created enabled; disable it out-of-band via the admin API.
+        Whether the key currently resolves. Defaults to true at mint. Mutable via PATCH (false = reversible disable; the key's `state` reads "disabled").
         """
         return pulumi.get(self, "enabled")
 
     @enabled.setter
     def enabled(self, value: pulumi.Input[Optional[_builtins.bool]]):
         pulumi.set(self, "enabled", value)
+
+    @_builtins.property
+    @pulumi.getter(name="expiresAt")
+    def expires_at(self) -> pulumi.Input[Optional[_builtins.int]]:
+        """
+        Token expiry as absolute Unix seconds. May be set at mint (mutually exclusive with `expires_in`) and is always computed from the mint response. Changing it replaces the key.
+        """
+        return pulumi.get(self, "expires_at")
+
+    @expires_at.setter
+    def expires_at(self, value: pulumi.Input[Optional[_builtins.int]]):
+        pulumi.set(self, "expires_at", value)
+
+    @_builtins.property
+    @pulumi.getter(name="expiresIn")
+    def expires_in(self) -> pulumi.Input[Optional[_builtins.str]]:
+        """
+        Token lifetime as a duration string (e.g. `7d`, `24h`, `30m`, `3600s`); the token's expiry is mint-time + this. Mutually exclusive with `expires_at`. Omitting both applies the server default TTL. Write-only mint directive; changing it replaces the key.
+        """
+        return pulumi.get(self, "expires_in")
+
+    @expires_in.setter
+    def expires_in(self, value: pulumi.Input[Optional[_builtins.str]]):
+        pulumi.set(self, "expires_in", value)
+
+    @_builtins.property
+    @pulumi.getter
+    def group(self) -> pulumi.Input[Optional[_builtins.str]]:
+        """
+        The `groups:` bucket this key binds to (at most one); all budget/rate enforcement flows through the group. The group must already exist unless `parent` is set (auto-provision). Omit for an authed-but-unlimited key. Mutable via PATCH: changing it rebinds, removing it unbinds.
+        """
+        return pulumi.get(self, "group")
+
+    @group.setter
+    def group(self, value: pulumi.Input[Optional[_builtins.str]]):
+        pulumi.set(self, "group", value)
+
+    @_builtins.property
+    @pulumi.getter(name="groupProvisioned")
+    def group_provisioned(self) -> pulumi.Input[Optional[_builtins.bool]]:
+        """
+        Whether the mint auto-provisioned its bound group leaf (self-service). Known only at creation.
+        """
+        return pulumi.get(self, "group_provisioned")
+
+    @group_provisioned.setter
+    def group_provisioned(self, value: pulumi.Input[Optional[_builtins.bool]]):
+        pulumi.set(self, "group_provisioned", value)
 
     @_builtins.property
     @pulumi.getter(name="issueAwsCredential")
@@ -278,16 +358,16 @@ class _VirtualKeyState:
         pulumi.set(self, "issue_aws_credential", value)
 
     @_builtins.property
-    @pulumi.getter(name="maxBudgetCents")
-    def max_budget_cents(self) -> pulumi.Input[Optional[_builtins.int]]:
+    @pulumi.getter
+    def labels(self) -> pulumi.Input[Optional[Mapping[str, pulumi.Input[_builtins.str]]]]:
         """
-        Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+        Mint-time labels echoed onto this key's metric series (Prometheus-safe names; never interpreted by enforcement). Immutable; changing them replaces the key.
         """
-        return pulumi.get(self, "max_budget_cents")
+        return pulumi.get(self, "labels")
 
-    @max_budget_cents.setter
-    def max_budget_cents(self, value: pulumi.Input[Optional[_builtins.int]]):
-        pulumi.set(self, "max_budget_cents", value)
+    @labels.setter
+    def labels(self, value: pulumi.Input[Optional[Mapping[str, pulumi.Input[_builtins.str]]]]):
+        pulumi.set(self, "labels", value)
 
     @_builtins.property
     @pulumi.getter
@@ -302,40 +382,40 @@ class _VirtualKeyState:
         pulumi.set(self, "name", value)
 
     @_builtins.property
-    @pulumi.getter(name="rpmLimit")
-    def rpm_limit(self) -> pulumi.Input[Optional[_builtins.int]]:
+    @pulumi.getter
+    def parent(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
-        Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        Auto-provision target: the EXISTING parent group under which `group` is created as a leaf when it does not yet exist. Write-only mint directive (never echoed by reads). Changing it replaces the key.
         """
-        return pulumi.get(self, "rpm_limit")
+        return pulumi.get(self, "parent")
 
-    @rpm_limit.setter
-    def rpm_limit(self, value: pulumi.Input[Optional[_builtins.int]]):
-        pulumi.set(self, "rpm_limit", value)
+    @parent.setter
+    def parent(self, value: pulumi.Input[Optional[_builtins.str]]):
+        pulumi.set(self, "parent", value)
 
     @_builtins.property
     @pulumi.getter
-    def secret(self) -> pulumi.Input[Optional[_builtins.str]]:
+    def state(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
-        The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
+        Lifecycle state derived by the server: active, disabled, revoked, or tombstoned. A tombstoned/revoked key is treated as gone and planned for recreation.
         """
-        return pulumi.get(self, "secret")
+        return pulumi.get(self, "state")
 
-    @secret.setter
-    def secret(self, value: pulumi.Input[Optional[_builtins.str]]):
-        pulumi.set(self, "secret", value)
+    @state.setter
+    def state(self, value: pulumi.Input[Optional[_builtins.str]]):
+        pulumi.set(self, "state", value)
 
     @_builtins.property
-    @pulumi.getter(name="tpmLimit")
-    def tpm_limit(self) -> pulumi.Input[Optional[_builtins.int]]:
+    @pulumi.getter
+    def token(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
-        Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        The busbar-signed bearer token (bbk_...) — the key credential. Returned only at creation; stored in state and never re-read.
         """
-        return pulumi.get(self, "tpm_limit")
+        return pulumi.get(self, "token")
 
-    @tpm_limit.setter
-    def tpm_limit(self, value: pulumi.Input[Optional[_builtins.int]]):
-        pulumi.set(self, "tpm_limit", value)
+    @token.setter
+    def token(self, value: pulumi.Input[Optional[_builtins.str]]):
+        pulumi.set(self, "token", value)
 
 
 @pulumi.type_token("busbar:index/virtualKey:VirtualKey")
@@ -345,15 +425,17 @@ class VirtualKey(pulumi.CustomResource):
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
                  allowed_pools: pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]] = None,
-                 budget_period: pulumi.Input[Optional[_builtins.str]] = None,
+                 enabled: pulumi.Input[Optional[_builtins.bool]] = None,
+                 expires_at: pulumi.Input[Optional[_builtins.int]] = None,
+                 expires_in: pulumi.Input[Optional[_builtins.str]] = None,
+                 group: pulumi.Input[Optional[_builtins.str]] = None,
                  issue_aws_credential: pulumi.Input[Optional[_builtins.bool]] = None,
-                 max_budget_cents: pulumi.Input[Optional[_builtins.int]] = None,
+                 labels: pulumi.Input[Optional[Mapping[str, pulumi.Input[_builtins.str]]]] = None,
                  name: pulumi.Input[Optional[_builtins.str]] = None,
-                 rpm_limit: pulumi.Input[Optional[_builtins.int]] = None,
-                 tpm_limit: pulumi.Input[Optional[_builtins.int]] = None,
+                 parent: pulumi.Input[Optional[_builtins.str]] = None,
                  __props__=None):
         """
-        A governance virtual key: a mintable, revocable credential with budget and rate caps scoped to a set of pools (POST/GET/PATCH/DELETE /api/v1/admin/keys). The plaintext secret is returned by busbar only once, at creation, and is stored in state as a sensitive value; refreshes update metadata (budget/limits/enabled) but never the secret. Requires `governance:` to be enabled on the gateway.
+        A governance virtual key (busbar >= 1.5.0): a mintable, revocable, EXPIRING signed-token credential, optionally bound to a `groups:` bucket that carries all budget and rate enforcement (POST/GET/PATCH/DELETE /api/v1/admin/keys). The signed token is returned by busbar only once, at creation, and is stored in state as a sensitive value; refreshes update metadata (group/enabled/state) but never the token. Requires governance to be enabled on the gateway.
 
         ## Example Usage
 
@@ -361,24 +443,26 @@ class VirtualKey(pulumi.CustomResource):
         import pulumi
         import pulumi_busbar as busbar
 
-        # Mint a governance virtual key with a daily budget and a request-rate cap,
-        # scoped to the "smart" pool. The plaintext secret is returned only once, at
-        # creation, and stored in state as a sensitive value.
+        # Mint a governance virtual key (busbar >= 1.5.0): a signed, expiring token,
+        # bound to a `groups:` bucket that carries all budget/rate enforcement, scoped
+        # to the "smart" pool. The signed token is returned only once, at creation, and
+        # stored in state as a sensitive value.
         app = busbar.VirtualKey("app",
             name="checkout-service",
-            budget_period="daily",
-            max_budget_cents=5000,
-            rpm_limit=60,
-            tpm_limit=200000,
-            allowed_pools=["smart"])
-        pulumi.export("appKeySecret", app.secret)
+            group="team-checkout",
+            allowed_pools=["smart"],
+            expires_in="30d",
+            labels={
+                "service": "checkout",
+            })
+        pulumi.export("appKeyToken", app.token)
         ```
 
         ## Import
 
         The `pulumi import` command can be used, for example:
 
-        Virtual keys are imported by their server-assigned id (the plaintext secret
+        Virtual keys are imported by their server-assigned id (the signed token
         cannot be recovered — it is create-only — and stays null after import).
 
         ```sh
@@ -388,13 +472,15 @@ class VirtualKey(pulumi.CustomResource):
 
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
-        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
-        :param pulumi.Input[_builtins.str] budget_period: Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Omitted/null means ALL pools; an explicit empty list means NO pools. Immutable; changing it replaces the key.
+        :param pulumi.Input[_builtins.bool] enabled: Whether the key currently resolves. Defaults to true at mint. Mutable via PATCH (false = reversible disable; the key's `state` reads "disabled").
+        :param pulumi.Input[_builtins.int] expires_at: Token expiry as absolute Unix seconds. May be set at mint (mutually exclusive with `expires_in`) and is always computed from the mint response. Changing it replaces the key.
+        :param pulumi.Input[_builtins.str] expires_in: Token lifetime as a duration string (e.g. `7d`, `24h`, `30m`, `3600s`); the token's expiry is mint-time + this. Mutually exclusive with `expires_at`. Omitting both applies the server default TTL. Write-only mint directive; changing it replaces the key.
+        :param pulumi.Input[_builtins.str] group: The `groups:` bucket this key binds to (at most one); all budget/rate enforcement flows through the group. The group must already exist unless `parent` is set (auto-provision). Omit for an authed-but-unlimited key. Mutable via PATCH: changing it rebinds, removing it unbinds.
         :param pulumi.Input[_builtins.bool] issue_aws_credential: When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
-        :param pulumi.Input[_builtins.int] max_budget_cents: Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+        :param pulumi.Input[Mapping[str, pulumi.Input[_builtins.str]]] labels: Mint-time labels echoed onto this key's metric series (Prometheus-safe names; never interpreted by enforcement). Immutable; changing them replaces the key.
         :param pulumi.Input[_builtins.str] name: Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
-        :param pulumi.Input[_builtins.int] rpm_limit: Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-        :param pulumi.Input[_builtins.int] tpm_limit: Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        :param pulumi.Input[_builtins.str] parent: Auto-provision target: the EXISTING parent group under which `group` is created as a leaf when it does not yet exist. Write-only mint directive (never echoed by reads). Changing it replaces the key.
         """
         ...
     @overload
@@ -403,7 +489,7 @@ class VirtualKey(pulumi.CustomResource):
                  args: Optional[VirtualKeyArgs] = None,
                  opts: Optional[pulumi.ResourceOptions] = None):
         """
-        A governance virtual key: a mintable, revocable credential with budget and rate caps scoped to a set of pools (POST/GET/PATCH/DELETE /api/v1/admin/keys). The plaintext secret is returned by busbar only once, at creation, and is stored in state as a sensitive value; refreshes update metadata (budget/limits/enabled) but never the secret. Requires `governance:` to be enabled on the gateway.
+        A governance virtual key (busbar >= 1.5.0): a mintable, revocable, EXPIRING signed-token credential, optionally bound to a `groups:` bucket that carries all budget and rate enforcement (POST/GET/PATCH/DELETE /api/v1/admin/keys). The signed token is returned by busbar only once, at creation, and is stored in state as a sensitive value; refreshes update metadata (group/enabled/state) but never the token. Requires governance to be enabled on the gateway.
 
         ## Example Usage
 
@@ -411,24 +497,26 @@ class VirtualKey(pulumi.CustomResource):
         import pulumi
         import pulumi_busbar as busbar
 
-        # Mint a governance virtual key with a daily budget and a request-rate cap,
-        # scoped to the "smart" pool. The plaintext secret is returned only once, at
-        # creation, and stored in state as a sensitive value.
+        # Mint a governance virtual key (busbar >= 1.5.0): a signed, expiring token,
+        # bound to a `groups:` bucket that carries all budget/rate enforcement, scoped
+        # to the "smart" pool. The signed token is returned only once, at creation, and
+        # stored in state as a sensitive value.
         app = busbar.VirtualKey("app",
             name="checkout-service",
-            budget_period="daily",
-            max_budget_cents=5000,
-            rpm_limit=60,
-            tpm_limit=200000,
-            allowed_pools=["smart"])
-        pulumi.export("appKeySecret", app.secret)
+            group="team-checkout",
+            allowed_pools=["smart"],
+            expires_in="30d",
+            labels={
+                "service": "checkout",
+            })
+        pulumi.export("appKeyToken", app.token)
         ```
 
         ## Import
 
         The `pulumi import` command can be used, for example:
 
-        Virtual keys are imported by their server-assigned id (the plaintext secret
+        Virtual keys are imported by their server-assigned id (the signed token
         cannot be recovered — it is create-only — and stays null after import).
 
         ```sh
@@ -452,12 +540,14 @@ class VirtualKey(pulumi.CustomResource):
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
                  allowed_pools: pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]] = None,
-                 budget_period: pulumi.Input[Optional[_builtins.str]] = None,
+                 enabled: pulumi.Input[Optional[_builtins.bool]] = None,
+                 expires_at: pulumi.Input[Optional[_builtins.int]] = None,
+                 expires_in: pulumi.Input[Optional[_builtins.str]] = None,
+                 group: pulumi.Input[Optional[_builtins.str]] = None,
                  issue_aws_credential: pulumi.Input[Optional[_builtins.bool]] = None,
-                 max_budget_cents: pulumi.Input[Optional[_builtins.int]] = None,
+                 labels: pulumi.Input[Optional[Mapping[str, pulumi.Input[_builtins.str]]]] = None,
                  name: pulumi.Input[Optional[_builtins.str]] = None,
-                 rpm_limit: pulumi.Input[Optional[_builtins.int]] = None,
-                 tpm_limit: pulumi.Input[Optional[_builtins.int]] = None,
+                 parent: pulumi.Input[Optional[_builtins.str]] = None,
                  __props__=None):
         opts = pulumi.ResourceOptions.merge(_utilities.get_resource_opts_defaults(), opts)
         if not isinstance(opts, pulumi.ResourceOptions):
@@ -468,18 +558,21 @@ class VirtualKey(pulumi.CustomResource):
             __props__ = VirtualKeyArgs.__new__(VirtualKeyArgs)
 
             __props__.__dict__["allowed_pools"] = allowed_pools
-            __props__.__dict__["budget_period"] = budget_period
+            __props__.__dict__["enabled"] = enabled
+            __props__.__dict__["expires_at"] = expires_at
+            __props__.__dict__["expires_in"] = expires_in
+            __props__.__dict__["group"] = group
             __props__.__dict__["issue_aws_credential"] = issue_aws_credential
-            __props__.__dict__["max_budget_cents"] = max_budget_cents
+            __props__.__dict__["labels"] = labels
             __props__.__dict__["name"] = name
-            __props__.__dict__["rpm_limit"] = rpm_limit
-            __props__.__dict__["tpm_limit"] = tpm_limit
+            __props__.__dict__["parent"] = parent
             __props__.__dict__["aws_access_key_id"] = None
             __props__.__dict__["aws_secret_access_key"] = None
             __props__.__dict__["created_at"] = None
-            __props__.__dict__["enabled"] = None
-            __props__.__dict__["secret"] = None
-        secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["awsSecretAccessKey", "secret"])
+            __props__.__dict__["group_provisioned"] = None
+            __props__.__dict__["state"] = None
+            __props__.__dict__["token"] = None
+        secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["awsSecretAccessKey", "token"])
         opts = pulumi.ResourceOptions.merge(opts, secret_opts)
         super(VirtualKey, __self__).__init__(
             'busbar:index/virtualKey:VirtualKey',
@@ -494,15 +587,18 @@ class VirtualKey(pulumi.CustomResource):
             allowed_pools: pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]] = None,
             aws_access_key_id: pulumi.Input[Optional[_builtins.str]] = None,
             aws_secret_access_key: pulumi.Input[Optional[_builtins.str]] = None,
-            budget_period: pulumi.Input[Optional[_builtins.str]] = None,
             created_at: pulumi.Input[Optional[_builtins.int]] = None,
             enabled: pulumi.Input[Optional[_builtins.bool]] = None,
+            expires_at: pulumi.Input[Optional[_builtins.int]] = None,
+            expires_in: pulumi.Input[Optional[_builtins.str]] = None,
+            group: pulumi.Input[Optional[_builtins.str]] = None,
+            group_provisioned: pulumi.Input[Optional[_builtins.bool]] = None,
             issue_aws_credential: pulumi.Input[Optional[_builtins.bool]] = None,
-            max_budget_cents: pulumi.Input[Optional[_builtins.int]] = None,
+            labels: pulumi.Input[Optional[Mapping[str, pulumi.Input[_builtins.str]]]] = None,
             name: pulumi.Input[Optional[_builtins.str]] = None,
-            rpm_limit: pulumi.Input[Optional[_builtins.int]] = None,
-            secret: pulumi.Input[Optional[_builtins.str]] = None,
-            tpm_limit: pulumi.Input[Optional[_builtins.int]] = None) -> 'VirtualKey':
+            parent: pulumi.Input[Optional[_builtins.str]] = None,
+            state: pulumi.Input[Optional[_builtins.str]] = None,
+            token: pulumi.Input[Optional[_builtins.str]] = None) -> 'VirtualKey':
         """
         Get an existing VirtualKey resource's state with the given name, id, and optional extra
         properties used to qualify the lookup.
@@ -510,18 +606,21 @@ class VirtualKey(pulumi.CustomResource):
         :param str resource_name: The unique name of the resulting resource.
         :param pulumi.Input[str] id: The unique provider ID of the resource to lookup.
         :param pulumi.ResourceOptions opts: Options for the resource.
-        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Omitted/null means ALL pools; an explicit empty list means NO pools. Immutable; changing it replaces the key.
         :param pulumi.Input[_builtins.str] aws_access_key_id: AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
         :param pulumi.Input[_builtins.str] aws_secret_access_key: AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
-        :param pulumi.Input[_builtins.str] budget_period: Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
         :param pulumi.Input[_builtins.int] created_at: Epoch seconds the key was minted.
-        :param pulumi.Input[_builtins.bool] enabled: Whether the key currently resolves. A key is created enabled; disable it out-of-band via the admin API.
+        :param pulumi.Input[_builtins.bool] enabled: Whether the key currently resolves. Defaults to true at mint. Mutable via PATCH (false = reversible disable; the key's `state` reads "disabled").
+        :param pulumi.Input[_builtins.int] expires_at: Token expiry as absolute Unix seconds. May be set at mint (mutually exclusive with `expires_in`) and is always computed from the mint response. Changing it replaces the key.
+        :param pulumi.Input[_builtins.str] expires_in: Token lifetime as a duration string (e.g. `7d`, `24h`, `30m`, `3600s`); the token's expiry is mint-time + this. Mutually exclusive with `expires_at`. Omitting both applies the server default TTL. Write-only mint directive; changing it replaces the key.
+        :param pulumi.Input[_builtins.str] group: The `groups:` bucket this key binds to (at most one); all budget/rate enforcement flows through the group. The group must already exist unless `parent` is set (auto-provision). Omit for an authed-but-unlimited key. Mutable via PATCH: changing it rebinds, removing it unbinds.
+        :param pulumi.Input[_builtins.bool] group_provisioned: Whether the mint auto-provisioned its bound group leaf (self-service). Known only at creation.
         :param pulumi.Input[_builtins.bool] issue_aws_credential: When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
-        :param pulumi.Input[_builtins.int] max_budget_cents: Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+        :param pulumi.Input[Mapping[str, pulumi.Input[_builtins.str]]] labels: Mint-time labels echoed onto this key's metric series (Prometheus-safe names; never interpreted by enforcement). Immutable; changing them replaces the key.
         :param pulumi.Input[_builtins.str] name: Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
-        :param pulumi.Input[_builtins.int] rpm_limit: Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-        :param pulumi.Input[_builtins.str] secret: The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
-        :param pulumi.Input[_builtins.int] tpm_limit: Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        :param pulumi.Input[_builtins.str] parent: Auto-provision target: the EXISTING parent group under which `group` is created as a leaf when it does not yet exist. Write-only mint directive (never echoed by reads). Changing it replaces the key.
+        :param pulumi.Input[_builtins.str] state: Lifecycle state derived by the server: active, disabled, revoked, or tombstoned. A tombstoned/revoked key is treated as gone and planned for recreation.
+        :param pulumi.Input[_builtins.str] token: The busbar-signed bearer token (bbk_...) — the key credential. Returned only at creation; stored in state and never re-read.
         """
         opts = pulumi.ResourceOptions.merge(opts, pulumi.ResourceOptions(id=id))
 
@@ -530,22 +629,25 @@ class VirtualKey(pulumi.CustomResource):
         __props__.__dict__["allowed_pools"] = allowed_pools
         __props__.__dict__["aws_access_key_id"] = aws_access_key_id
         __props__.__dict__["aws_secret_access_key"] = aws_secret_access_key
-        __props__.__dict__["budget_period"] = budget_period
         __props__.__dict__["created_at"] = created_at
         __props__.__dict__["enabled"] = enabled
+        __props__.__dict__["expires_at"] = expires_at
+        __props__.__dict__["expires_in"] = expires_in
+        __props__.__dict__["group"] = group
+        __props__.__dict__["group_provisioned"] = group_provisioned
         __props__.__dict__["issue_aws_credential"] = issue_aws_credential
-        __props__.__dict__["max_budget_cents"] = max_budget_cents
+        __props__.__dict__["labels"] = labels
         __props__.__dict__["name"] = name
-        __props__.__dict__["rpm_limit"] = rpm_limit
-        __props__.__dict__["secret"] = secret
-        __props__.__dict__["tpm_limit"] = tpm_limit
+        __props__.__dict__["parent"] = parent
+        __props__.__dict__["state"] = state
+        __props__.__dict__["token"] = token
         return VirtualKey(resource_name, opts=opts, __props__=__props__)
 
     @_builtins.property
     @pulumi.getter(name="allowedPools")
     def allowed_pools(self) -> pulumi.Output[Optional[Sequence[_builtins.str]]]:
         """
-        Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+        Pools this key may target. Omitted/null means ALL pools; an explicit empty list means NO pools. Immutable; changing it replaces the key.
         """
         return pulumi.get(self, "allowed_pools")
 
@@ -566,14 +668,6 @@ class VirtualKey(pulumi.CustomResource):
         return pulumi.get(self, "aws_secret_access_key")
 
     @_builtins.property
-    @pulumi.getter(name="budgetPeriod")
-    def budget_period(self) -> pulumi.Output[_builtins.str]:
-        """
-        Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
-        """
-        return pulumi.get(self, "budget_period")
-
-    @_builtins.property
     @pulumi.getter(name="createdAt")
     def created_at(self) -> pulumi.Output[_builtins.int]:
         """
@@ -585,9 +679,41 @@ class VirtualKey(pulumi.CustomResource):
     @pulumi.getter
     def enabled(self) -> pulumi.Output[_builtins.bool]:
         """
-        Whether the key currently resolves. A key is created enabled; disable it out-of-band via the admin API.
+        Whether the key currently resolves. Defaults to true at mint. Mutable via PATCH (false = reversible disable; the key's `state` reads "disabled").
         """
         return pulumi.get(self, "enabled")
+
+    @_builtins.property
+    @pulumi.getter(name="expiresAt")
+    def expires_at(self) -> pulumi.Output[_builtins.int]:
+        """
+        Token expiry as absolute Unix seconds. May be set at mint (mutually exclusive with `expires_in`) and is always computed from the mint response. Changing it replaces the key.
+        """
+        return pulumi.get(self, "expires_at")
+
+    @_builtins.property
+    @pulumi.getter(name="expiresIn")
+    def expires_in(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        Token lifetime as a duration string (e.g. `7d`, `24h`, `30m`, `3600s`); the token's expiry is mint-time + this. Mutually exclusive with `expires_at`. Omitting both applies the server default TTL. Write-only mint directive; changing it replaces the key.
+        """
+        return pulumi.get(self, "expires_in")
+
+    @_builtins.property
+    @pulumi.getter
+    def group(self) -> pulumi.Output[Optional[_builtins.str]]:
+        """
+        The `groups:` bucket this key binds to (at most one); all budget/rate enforcement flows through the group. The group must already exist unless `parent` is set (auto-provision). Omit for an authed-but-unlimited key. Mutable via PATCH: changing it rebinds, removing it unbinds.
+        """
+        return pulumi.get(self, "group")
+
+    @_builtins.property
+    @pulumi.getter(name="groupProvisioned")
+    def group_provisioned(self) -> pulumi.Output[_builtins.bool]:
+        """
+        Whether the mint auto-provisioned its bound group leaf (self-service). Known only at creation.
+        """
+        return pulumi.get(self, "group_provisioned")
 
     @_builtins.property
     @pulumi.getter(name="issueAwsCredential")
@@ -598,12 +724,12 @@ class VirtualKey(pulumi.CustomResource):
         return pulumi.get(self, "issue_aws_credential")
 
     @_builtins.property
-    @pulumi.getter(name="maxBudgetCents")
-    def max_budget_cents(self) -> pulumi.Output[Optional[_builtins.int]]:
+    @pulumi.getter
+    def labels(self) -> pulumi.Output[Optional[Mapping[str, _builtins.str]]]:
         """
-        Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+        Mint-time labels echoed onto this key's metric series (Prometheus-safe names; never interpreted by enforcement). Immutable; changing them replaces the key.
         """
-        return pulumi.get(self, "max_budget_cents")
+        return pulumi.get(self, "labels")
 
     @_builtins.property
     @pulumi.getter
@@ -614,26 +740,26 @@ class VirtualKey(pulumi.CustomResource):
         return pulumi.get(self, "name")
 
     @_builtins.property
-    @pulumi.getter(name="rpmLimit")
-    def rpm_limit(self) -> pulumi.Output[Optional[_builtins.int]]:
+    @pulumi.getter
+    def parent(self) -> pulumi.Output[Optional[_builtins.str]]:
         """
-        Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        Auto-provision target: the EXISTING parent group under which `group` is created as a leaf when it does not yet exist. Write-only mint directive (never echoed by reads). Changing it replaces the key.
         """
-        return pulumi.get(self, "rpm_limit")
+        return pulumi.get(self, "parent")
 
     @_builtins.property
     @pulumi.getter
-    def secret(self) -> pulumi.Output[_builtins.str]:
+    def state(self) -> pulumi.Output[_builtins.str]:
         """
-        The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
+        Lifecycle state derived by the server: active, disabled, revoked, or tombstoned. A tombstoned/revoked key is treated as gone and planned for recreation.
         """
-        return pulumi.get(self, "secret")
+        return pulumi.get(self, "state")
 
     @_builtins.property
-    @pulumi.getter(name="tpmLimit")
-    def tpm_limit(self) -> pulumi.Output[Optional[_builtins.int]]:
+    @pulumi.getter
+    def token(self) -> pulumi.Output[_builtins.str]:
         """
-        Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        The busbar-signed bearer token (bbk_...) — the key credential. Returned only at creation; stored in state and never re-read.
         """
-        return pulumi.get(self, "tpm_limit")
+        return pulumi.get(self, "token")
 
