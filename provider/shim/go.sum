@@ -1,5 +1,5 @@
-github.com/GetBusbar/terraform-provider-busbar v0.2.0 h1:B7E0mFFdsBHKgbbN/Ig3K960t6GIwTZRp5pASrC/u7s=
-github.com/GetBusbar/terraform-provider-busbar v0.2.0/go.mod h1:Ej94q0+IQ5gEC9YUa1RDr1RJdgghMU2iKAbiQpXEZ/o=
+github.com/GetBusbar/terraform-provider-busbar v0.2.1 h1:bgp7dzDu6qVLgl/aDqnfam/8jr2hHMXdP1A2kACzLsY=
+github.com/GetBusbar/terraform-provider-busbar v0.2.1/go.mod h1:Ej94q0+IQ5gEC9YUa1RDr1RJdgghMU2iKAbiQpXEZ/o=
 github.com/ProtonMail/go-crypto v1.4.1 h1:9RfcZHqEQUvP8RzecWEUafnZVtEvrBVL9BiF67IQOfM=
 github.com/ProtonMail/go-crypto v1.4.1/go.mod h1:e1OaTyu5SYVrO9gKOEhTc+5UcXtTUa+P3uLudwcgPqo=
 github.com/RaveNoX/go-jsoncommentstrip v1.0.0/go.mod h1:78ihd09MekBnJnxpICcwzCMzGrKSKYe4AqU6PDYYpjk=
