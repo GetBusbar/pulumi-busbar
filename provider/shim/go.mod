@@ -7,7 +7,7 @@ module github.com/GetBusbar/terraform-provider-busbar/shim
 go 1.26
 
 require (
-	github.com/GetBusbar/terraform-provider-busbar v0.2.1
+	github.com/GetBusbar/terraform-provider-busbar v0.2.2
 	github.com/hashicorp/terraform-plugin-framework v1.19.0
 )
 
