@@ -66,6 +66,11 @@ The Go SDK needs no package registry; it is consumed straight from the git tag:
 go get github.com/getbusbar/pulumi-busbar/sdk/go/busbar@v0.1.3
 ```
 
+`sdk/` is its own Go module, so each release also carries a `sdk/vX.Y.Z` tag
+which is what the Go toolchain actually resolves. A freshly pushed tag can take
+a little while to appear on proxy.golang.org and sum.golang.org; until it does,
+`GOPROXY=direct go get ...` fetches it straight from GitHub.
+
 ### TypeScript / JavaScript, Python
 
 `npm install @getbusbar/pulumi-busbar` and `pip install pulumi_busbar` DO NOT WORK yet.

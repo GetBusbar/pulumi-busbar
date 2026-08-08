@@ -240,4 +240,11 @@ jobs:
           set -euo pipefail
           git tag "${TAG}"
           git push origin "refs/tags/${TAG}"
-          echo "::notice::pushed ${TAG} — release.yml will build the SDKs, publish the plugin binaries to the GitHub Release (GITHUB_TOKEN), and loud-skip npm/PyPI until their tokens are provisioned"
+          # sdk/ is its own Go module (module github.com/getbusbar/pulumi-busbar/sdk), so the Go
+          # toolchain only sees a version of it through a submodule-prefixed tag. Without sdk/${TAG},
+          # `go get github.com/getbusbar/pulumi-busbar/sdk/go/busbar@${TAG}` fails with
+          # "found, but does not contain package" - which is exactly what the README told users to
+          # run. This tag has no plain v* prefix, so it does not re-trigger release.yml.
+          git tag "sdk/${TAG}"
+          git push origin "refs/tags/sdk/${TAG}"
+          echo "::notice::pushed ${TAG} and sdk/${TAG} - release.yml will build the SDKs, publish the plugin binaries to the GitHub Release (GITHUB_TOKEN), and loud-skip npm/PyPI until their tokens are provisioned"
