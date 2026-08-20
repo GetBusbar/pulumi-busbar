@@ -45,7 +45,7 @@ class HookArgs:
         :param pulumi.Input[_builtins.str] on_error: Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
         :param pulumi.Input[_builtins.int] priority: Ordering priority within a stage. Defaults to 0.
         :param pulumi.Input[_builtins.str] prompt: Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
-        :param pulumi.Input[_builtins.str] settings: Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
+        :param pulumi.Input[_builtins.str] settings: Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as `settings_keys`); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.
         :param pulumi.Input[_builtins.int] timeout_ms: Per-call timeout in milliseconds. Defaults to 1.
         :param pulumi.Input[_builtins.str] user: Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
         """
@@ -198,7 +198,7 @@ class HookArgs:
     @pulumi.getter
     def settings(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
-        Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
+        Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as `settings_keys`); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.
         """
         return pulumi.get(self, "settings")
 
@@ -260,7 +260,7 @@ class _HookState:
         :param pulumi.Input[_builtins.str] plugin: The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
         :param pulumi.Input[_builtins.int] priority: Ordering priority within a stage. Defaults to 0.
         :param pulumi.Input[_builtins.str] prompt: Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
-        :param pulumi.Input[_builtins.str] settings: Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
+        :param pulumi.Input[_builtins.str] settings: Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as `settings_keys`); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.
         :param pulumi.Input[_builtins.int] timeout_ms: Per-call timeout in milliseconds. Defaults to 1.
         :param pulumi.Input[_builtins.str] user: Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
         """
@@ -415,7 +415,7 @@ class _HookState:
     @pulumi.getter
     def settings(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
-        Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
+        Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as `settings_keys`); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.
         """
         return pulumi.get(self, "settings")
 
@@ -524,7 +524,7 @@ class Hook(pulumi.CustomResource):
         :param pulumi.Input[_builtins.str] plugin: The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
         :param pulumi.Input[_builtins.int] priority: Ordering priority within a stage. Defaults to 0.
         :param pulumi.Input[_builtins.str] prompt: Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
-        :param pulumi.Input[_builtins.str] settings: Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
+        :param pulumi.Input[_builtins.str] settings: Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as `settings_keys`); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.
         :param pulumi.Input[_builtins.int] timeout_ms: Per-call timeout in milliseconds. Defaults to 1.
         :param pulumi.Input[_builtins.str] user: Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
         """
@@ -672,7 +672,7 @@ class Hook(pulumi.CustomResource):
         :param pulumi.Input[_builtins.str] plugin: The signed `kind: hook` plugin this hook dispatches to (its NAME from the gateway's plugin catalog, e.g. a compiled-in plugin such as `ranking`).
         :param pulumi.Input[_builtins.int] priority: Ordering priority within a stage. Defaults to 0.
         :param pulumi.Input[_builtins.str] prompt: Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
-        :param pulumi.Input[_builtins.str] settings: Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
+        :param pulumi.Input[_builtins.str] settings: Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as `settings_keys`); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.
         :param pulumi.Input[_builtins.int] timeout_ms: Per-call timeout in milliseconds. Defaults to 1.
         :param pulumi.Input[_builtins.str] user: Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
         """
@@ -779,7 +779,7 @@ class Hook(pulumi.CustomResource):
     @pulumi.getter
     def settings(self) -> pulumi.Output[_builtins.str]:
         """
-        Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
+        Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as `settings_keys`); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.
         """
         return pulumi.get(self, "settings")
 

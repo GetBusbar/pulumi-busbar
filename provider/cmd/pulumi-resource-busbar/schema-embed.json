@@ -245,7 +245,7 @@
                 },
                 "settings": {
                     "type": "string",
-                    "description": "Opaque per-hook settings as a JSON object string (\u003c= 64KiB, \u003c= 256 keys). Defaults to {}.\n"
+                    "description": "Opaque per-hook settings as a JSON object string (\u003c= 64KiB, \u003c= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as \u003cspan pulumi-lang-nodejs=\"`settingsKeys`\" pulumi-lang-dotnet=\"`SettingsKeys`\" pulumi-lang-go=\"`settingsKeys`\" pulumi-lang-python=\"`settings_keys`\" pulumi-lang-yaml=\"`settingsKeys`\" pulumi-lang-java=\"`settingsKeys`\" pulumi-lang-hcl=\"`settings_keys`\"\u003e`settingsKeys`\u003c/span\u003e); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.\n"
                 },
                 "timeoutMs": {
                     "type": "integer",
@@ -311,7 +311,7 @@
                 },
                 "settings": {
                     "type": "string",
-                    "description": "Opaque per-hook settings as a JSON object string (\u003c= 64KiB, \u003c= 256 keys). Defaults to {}.\n"
+                    "description": "Opaque per-hook settings as a JSON object string (\u003c= 64KiB, \u003c= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as \u003cspan pulumi-lang-nodejs=\"`settingsKeys`\" pulumi-lang-dotnet=\"`SettingsKeys`\" pulumi-lang-go=\"`settingsKeys`\" pulumi-lang-python=\"`settings_keys`\" pulumi-lang-yaml=\"`settingsKeys`\" pulumi-lang-java=\"`settingsKeys`\" pulumi-lang-hcl=\"`settings_keys`\"\u003e`settingsKeys`\u003c/span\u003e); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.\n"
                 },
                 "timeoutMs": {
                     "type": "integer",
@@ -371,7 +371,7 @@
                     },
                     "settings": {
                         "type": "string",
-                        "description": "Opaque per-hook settings as a JSON object string (\u003c= 64KiB, \u003c= 256 keys). Defaults to {}.\n"
+                        "description": "Opaque per-hook settings as a JSON object string (\u003c= 64KiB, \u003c= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as \u003cspan pulumi-lang-nodejs=\"`settingsKeys`\" pulumi-lang-dotnet=\"`SettingsKeys`\" pulumi-lang-go=\"`settingsKeys`\" pulumi-lang-python=\"`settings_keys`\" pulumi-lang-yaml=\"`settingsKeys`\" pulumi-lang-java=\"`settingsKeys`\" pulumi-lang-hcl=\"`settings_keys`\"\u003e`settingsKeys`\u003c/span\u003e); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.\n"
                     },
                     "timeoutMs": {
                         "type": "integer",

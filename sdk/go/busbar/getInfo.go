@@ -78,10 +78,8 @@ type GetInfoResult struct {
 }
 
 func GetInfoOutput(ctx *pulumi.Context, opts ...pulumi.InvokeOption) GetInfoResultOutput {
-	return pulumi.ToOutput(0).ApplyT(func(int) (GetInfoResultOutput, error) {
-		options := pulumi.InvokeOutputOptions{InvokeOptions: internal.PkgInvokeDefaultOpts(opts)}
-		return ctx.InvokeOutput("busbar:index/getInfo:getInfo", nil, GetInfoResultOutput{}, options).(GetInfoResultOutput), nil
-	}).(GetInfoResultOutput)
+	options := pulumi.InvokeOutputOptions{InvokeOptions: internal.PkgInvokeDefaultOpts(opts)}
+	return ctx.InvokeOutput("busbar:index/getInfo:getInfo", nil, GetInfoResultOutput{}, options).(GetInfoResultOutput)
 }
 
 // A collection of values returned by getInfo.

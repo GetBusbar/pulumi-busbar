@@ -102,7 +102,7 @@ type Hook struct {
 	Priority pulumi.IntOutput `pulumi:"priority"`
 	// Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
 	Prompt pulumi.StringOutput `pulumi:"prompt"`
-	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
+	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as `settingsKeys`); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.
 	Settings pulumi.StringOutput `pulumi:"settings"`
 	// Per-call timeout in milliseconds. Defaults to 1.
 	TimeoutMs pulumi.IntOutput `pulumi:"timeoutMs"`
@@ -166,7 +166,7 @@ type hookState struct {
 	Priority *int `pulumi:"priority"`
 	// Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
 	Prompt *string `pulumi:"prompt"`
-	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
+	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as `settingsKeys`); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.
 	Settings *string `pulumi:"settings"`
 	// Per-call timeout in milliseconds. Defaults to 1.
 	TimeoutMs *int `pulumi:"timeoutMs"`
@@ -195,7 +195,7 @@ type HookState struct {
 	Priority pulumi.IntPtrInput
 	// Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
 	Prompt pulumi.StringPtrInput
-	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
+	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as `settingsKeys`); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.
 	Settings pulumi.StringPtrInput
 	// Per-call timeout in milliseconds. Defaults to 1.
 	TimeoutMs pulumi.IntPtrInput
@@ -228,7 +228,7 @@ type hookArgs struct {
 	Priority *int `pulumi:"priority"`
 	// Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
 	Prompt *string `pulumi:"prompt"`
-	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
+	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as `settingsKeys`); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.
 	Settings *string `pulumi:"settings"`
 	// Per-call timeout in milliseconds. Defaults to 1.
 	TimeoutMs *int `pulumi:"timeoutMs"`
@@ -258,7 +258,7 @@ type HookArgs struct {
 	Priority pulumi.IntPtrInput
 	// Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
 	Prompt pulumi.StringPtrInput
-	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
+	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as `settingsKeys`); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.
 	Settings pulumi.StringPtrInput
 	// Per-call timeout in milliseconds. Defaults to 1.
 	TimeoutMs pulumi.IntPtrInput
@@ -403,7 +403,7 @@ func (o HookOutput) Prompt() pulumi.StringOutput {
 	return o.ApplyT(func(v *Hook) pulumi.StringOutput { return v.Prompt }).(pulumi.StringOutput)
 }
 
-// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
+// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as `settingsKeys`); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.
 func (o HookOutput) Settings() pulumi.StringOutput {
 	return o.ApplyT(func(v *Hook) pulumi.StringOutput { return v.Settings }).(pulumi.StringOutput)
 }

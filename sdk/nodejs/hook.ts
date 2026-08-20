@@ -117,7 +117,7 @@ export class Hook extends pulumi.CustomResource {
      */
     declare public readonly prompt: pulumi.Output<string>;
     /**
-     * Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
+     * Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as `settingsKeys`); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.
      */
     declare public readonly settings: pulumi.Output<string>;
     /**
@@ -227,7 +227,7 @@ export interface HookState {
      */
     prompt?: pulumi.Input<string | undefined>;
     /**
-     * Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
+     * Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as `settingsKeys`); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.
      */
     settings?: pulumi.Input<string | undefined>;
     /**
@@ -285,7 +285,7 @@ export interface HookArgs {
      */
     prompt?: pulumi.Input<string | undefined>;
     /**
-     * Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
+     * Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}. The bag may carry SecretRefs, so busbar redacts it on every read (only the key names are echoed, as `settingsKeys`); the provider keeps the last value it applied and detects drift by key names. Values changed outside Terraform with the SAME key set are invisible.
      */
     settings?: pulumi.Input<string | undefined>;
     /**
