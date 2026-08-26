@@ -60,6 +60,7 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           files: ./provider/coverage.out,./provider/shim/coverage.out,./sdk/coverage.out
           slug: GetBusbar/pulumi-busbar
           fail_ci_if_error: false
