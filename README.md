@@ -1,5 +1,7 @@
 # Pulumi Busbar Provider
 
+[![codecov](https://codecov.io/gh/GetBusbar/pulumi-busbar/branch/dev/graph/badge.svg)](https://codecov.io/gh/GetBusbar/pulumi-busbar)
+
 A [Pulumi](https://www.pulumi.com) provider for [Busbar](https://getbusbar.com), the
 LLM gateway. It manages Busbar resources through the gateway's admin API and is a
 **bridge** of the upstream [`GetBusbar/terraform-provider-busbar`](https://github.com/GetBusbar/terraform-provider-busbar)

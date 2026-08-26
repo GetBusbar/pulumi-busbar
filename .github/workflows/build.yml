@@ -32,3 +32,34 @@ jobs:
       - name: Build Go SDK
         working-directory: sdk
         run: go build ./...
+
+  # Non-required, additive coverage job. Runs unit tests only (no TF_ACC /
+  # acceptance tests) and uploads to Codecov tokenless. Informational only —
+  # not part of any required check and not a dependency of the build job.
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.26"
+
+      - name: Test provider (unit) with coverage
+        working-directory: provider
+        run: go test ./... -covermode=atomic -coverprofile=coverage.out
+
+      - name: Test provider shim (unit) with coverage
+        working-directory: provider/shim
+        run: go test ./... -covermode=atomic -coverprofile=coverage.out
+
+      - name: Test Go SDK (unit) with coverage
+        working-directory: sdk
+        run: go test ./... -covermode=atomic -coverprofile=coverage.out
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./provider/coverage.out,./provider/shim/coverage.out,./sdk/coverage.out
+          slug: GetBusbar/pulumi-busbar
+          fail_ci_if_error: false
