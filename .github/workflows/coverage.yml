@@ -1,0 +1,38 @@
+name: coverage
+
+# Non-gating Codecov coverage. Separate from build.yml so it can never affect
+# the required checks. This is a multi-module repo (provider/ and sdk/ each
+# have their own go.mod); coverage runs against the provider module, which is
+# the bridged provider logic. The whole job is continue-on-error and the upload
+# is fail_ci_if_error: false, so a coverage hiccup never blocks a merge.
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+
+permissions:
+  contents: read
+
+jobs:
+  coverage:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: provider/go.mod
+
+      - name: Test with coverage (provider module)
+        working-directory: provider
+        run: go test -coverprofile=coverage.txt -covermode=atomic ./...
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: ${{ github.repository }}
+          files: provider/coverage.txt
+          fail_ci_if_error: false
