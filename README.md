@@ -1,5 +1,9 @@
 # Pulumi Busbar Provider
 
+[![CI](https://github.com/GetBusbar/pulumi-busbar/actions/workflows/build.yml/badge.svg)](https://github.com/GetBusbar/pulumi-busbar/actions/workflows/build.yml)
+[![codecov](https://codecov.io/gh/GetBusbar/pulumi-busbar/branch/main/graph/badge.svg)](https://codecov.io/gh/GetBusbar/pulumi-busbar)
+[![License: Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
+
 A [Pulumi](https://www.pulumi.com) provider for [Busbar](https://getbusbar.com), the
 LLM gateway. It manages Busbar resources through the gateway's admin API and is a
 **bridge** of the upstream [`GetBusbar/terraform-provider-busbar`](https://github.com/GetBusbar/terraform-provider-busbar)
