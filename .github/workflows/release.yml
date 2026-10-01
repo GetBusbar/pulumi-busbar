@@ -23,12 +23,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout pulumi-busbar
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           path: pulumi-busbar
 
       - name: Checkout terraform-provider-busbar
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           repository: GetBusbar/terraform-provider-busbar
           path: terraform-provider-busbar
