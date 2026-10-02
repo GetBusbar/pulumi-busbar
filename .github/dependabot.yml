@@ -1,0 +1,58 @@
+# Dependency updates target dev. Every update of an ecosystem is ONE grouped PR, and
+# .github/workflows/dependabot-bundle.yml folds all of them into one branch and one PR.
+version: 2
+updates:
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: weekly
+  target-branch: dev
+  groups:
+    all:
+      patterns:
+      - '*'
+- package-ecosystem: gomod
+  directory: /provider
+  schedule:
+    interval: weekly
+  target-branch: dev
+  groups:
+    all:
+      patterns:
+      - '*'
+- package-ecosystem: gomod
+  directory: /provider/shim
+  schedule:
+    interval: weekly
+  target-branch: dev
+  groups:
+    all:
+      patterns:
+      - '*'
+- package-ecosystem: gomod
+  directory: /sdk
+  schedule:
+    interval: weekly
+  target-branch: dev
+  groups:
+    all:
+      patterns:
+      - '*'
+- package-ecosystem: npm
+  directory: /sdk/nodejs
+  schedule:
+    interval: weekly
+  target-branch: dev
+  groups:
+    all:
+      patterns:
+      - '*'
+- package-ecosystem: pip
+  directory: /sdk/python
+  schedule:
+    interval: weekly
+  target-branch: dev
+  groups:
+    all:
+      patterns:
+      - '*'
