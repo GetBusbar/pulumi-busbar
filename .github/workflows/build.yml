@@ -58,7 +58,7 @@ jobs:
         run: go test ./... -covermode=atomic -coverprofile=coverage.out
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: ./provider/coverage.out,./provider/shim/coverage.out,./sdk/coverage.out
