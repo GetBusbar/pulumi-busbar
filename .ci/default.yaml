@@ -1,0 +1,58 @@
+# Imported from .github/workflows/build.yml by `modernci import github`.
+to: dev
+on:
+  move:
+  - build
+  - coverage
+  push:
+  - build
+  - coverage
+  landed:
+  - build
+  - coverage
+  manual:
+  - build
+  - coverage
+checks:
+  build:
+    run: |
+      set -e
+      # Build provider (bridges against published terraform-provider-busbar)
+      ( cd "provider" && bash -e /dev/fd/3 3<<'MODERNCI_STEP' </dev/null
+      go build ./...
+      MODERNCI_STEP
+      )
+      # Vet provider
+      ( cd "provider" && bash -e /dev/fd/3 3<<'MODERNCI_STEP' </dev/null
+      go vet ./...
+      MODERNCI_STEP
+      )
+      # Build Go SDK
+      ( cd "sdk" && bash -e /dev/fd/3 3<<'MODERNCI_STEP' </dev/null
+      go build ./...
+      MODERNCI_STEP
+      )
+    requires:
+    - go
+  coverage:
+    run: |
+      set -e
+      # Test provider (unit) with coverage
+      ( cd "provider" && bash -e /dev/fd/3 3<<'MODERNCI_STEP' </dev/null
+      go test ./... -covermode=atomic -coverprofile=coverage.out
+      MODERNCI_STEP
+      )
+      # Test provider shim (unit) with coverage
+      ( cd "provider/shim" && bash -e /dev/fd/3 3<<'MODERNCI_STEP' </dev/null
+      go test ./... -covermode=atomic -coverprofile=coverage.out
+      MODERNCI_STEP
+      )
+      # Test Go SDK (unit) with coverage
+      ( cd "sdk" && bash -e /dev/fd/3 3<<'MODERNCI_STEP' </dev/null
+      go test ./... -covermode=atomic -coverprofile=coverage.out
+      MODERNCI_STEP
+      )
+    requires:
+    - go
+env:
+  CI: 'true'
