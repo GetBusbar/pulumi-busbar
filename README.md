@@ -85,7 +85,11 @@ local `replace` directive. The upstream provider's implementation lives in an
 (`provider/shim/busbarshim`) whose import path descends from the upstream module
 root is used to expose `provider.New` to the bridge.
 
-Generation requires Go 1.26 and Python 3. Python post-processing preserves SDK
+Generation requires Go 1.26, Python 3, and the Pulumi CLI version pinned by
+`github.com/pulumi/pulumi/pkg/v3` in `provider/go.mod`. Run
+`python3 scripts/check_pulumi.py --required-version` to print the required CLI
+version. The bridge delegates SDK generation to this external CLI; Make checks
+its version before writing generated files. Python post-processing preserves SDK
 secret accessors, configuration type stubs, and package layout after regeneration.
 
 ```bash

@@ -19,7 +19,7 @@ BIN             := $(GOPATH)/bin
 LDFLAGS         := -X $(PROJECT)/provider/pkg/version.Version=$(VERSION)
 
 .PHONY: default ensure tfgen provider build_sdks build_nodejs build_python build_go \
-        clean lint schema drift help
+        clean lint schema drift help check_pulumi
 
 default: provider build_sdks
 
@@ -30,7 +30,10 @@ default: provider build_sdks
 tfgen:: ## Build the pulumi-tfgen-busbar binary
 	cd $(PROVIDER_PATH) && go build -o $(BIN)/$(TFGEN) -ldflags "$(LDFLAGS)" ./cmd/$(TFGEN)
 
-schema:: tfgen ## Generate the Pulumi Package Schema (schema.json)
+check_pulumi:: ## Check the pinned Pulumi CLI before generating files
+	python3 scripts/check_pulumi.py
+
+schema:: check_pulumi tfgen ## Generate the Pulumi Package Schema (schema.json)
 	$(BIN)/$(TFGEN) schema --out $(PROVIDER_PATH)/cmd/$(PROVIDER)
 	cp $(SCHEMA_PATH) $(SCHEMA_EMBED)
 
@@ -43,15 +46,15 @@ provider:: schema ## Build the pulumi-resource-busbar plugin binary (embeds the 
 
 build_sdks:: build_nodejs build_python build_go ## Generate all language SDKs
 
-build_nodejs:: tfgen ## Generate the TypeScript/JavaScript SDK
+build_nodejs:: check_pulumi tfgen ## Generate the TypeScript/JavaScript SDK
 	$(BIN)/$(TFGEN) nodejs --out sdk/nodejs
 	python3 scripts/prepare_nodejs.py sdk/nodejs
 
-build_python:: tfgen ## Generate the Python SDK
+build_python:: check_pulumi tfgen ## Generate the Python SDK
 	$(BIN)/$(TFGEN) python --out sdk/python
 	python3 scripts/prepare_python.py sdk/python
 
-build_go:: tfgen ## Generate the Go SDK
+build_go:: check_pulumi tfgen ## Generate the Go SDK
 	$(BIN)/$(TFGEN) go --out sdk/go
 	python3 scripts/prepare_go.py sdk/go
 
