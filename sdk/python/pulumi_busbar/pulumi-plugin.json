@@ -1,5 +1,6 @@
 {
   "resource": true,
   "name": "busbar",
+  "version": "0.0.1",
   "server": "github://api.github.com/getbusbar"
 }

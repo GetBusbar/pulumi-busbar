@@ -4,6 +4,49 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as utilities from "./utilities";
 
+/**
+ * A routing hook: an external tap or gate reached over a unix socket or webhook, wired into busbar's request/ranking pipeline (POST/GET/PUT/DELETE /api/v1/admin/hooks). Exactly one of socket or webhook must be set. The grant fields (kind, prompt, user) are immutable once registered — changing them replaces the hook.
+ *
+ * ## Example Usage
+ *
+ * ```typescript
+ * import * as pulumi from "@pulumi/pulumi";
+ * import * as busbar from "@getbusbar/pulumi-busbar";
+ *
+ * // Register a blocking "gate" hook reached over a webhook: it may inspect
+ * // (prompt = "ro") and rerank candidates before the request is dispatched.
+ * const ranker = new busbar.Hook("ranker", {
+ *     name: "quality-ranker",
+ *     kind: "gate",
+ *     webhook: "https://ranker.internal.example/rank",
+ *     prompt: "ro",
+ *     timeoutMs: 100,
+ *     priority: 10,
+ *     onError: "weighted",
+ *     settings: JSON.stringify({
+ *         min_score: 0.6,
+ *     }),
+ * });
+ * // A fire-and-forget "tap" hook over a unix socket for async usage telemetry.
+ * const usageTap = new busbar.Hook("usage_tap", {
+ *     name: "usage-telemetry",
+ *     kind: "tap",
+ *     socket: "/run/busbar/usage.sock",
+ *     at: "completion",
+ *     global: true,
+ * });
+ * ```
+ *
+ * ## Import
+ *
+ * The `pulumi import` command can be used, for example:
+ *
+ * Hooks are imported by name.
+ *
+ * ```sh
+ * $ pulumi import busbar:index/hook:Hook ranker quality-ranker
+ * ```
+ */
 export class Hook extends pulumi.CustomResource {
     /**
      * Get an existing Hook resource's state with the given name, ID, and optional extra

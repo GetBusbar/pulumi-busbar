@@ -12,6 +12,87 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
+// A GitOps singleton that owns the running busbar config and applies it wholesale (POST /api/v1/admin/config/apply). Manage at most ONE of these per gateway. The document is the full JSON config payload busbar boots from ({"config": {...}, "providers": {...}}); applying it bumps config_version. Applies are LIVE-ONLY by default — they revert to disk truth on the next reload or restart unless the gateway persists an overlay. Destroying this resource is a no-op on the gateway (there is no unapply); it only drops Terraform's tracking.
+//
+// ## Example Usage
+//
+// ```go
+// package main
+//
+// import (
+//
+//	"encoding/json"
+//
+//	"github.com/getbusbar/pulumi-busbar/sdk/go/busbar"
+//	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
+//
+// )
+//
+//	func main() {
+//		pulumi.Run(func(ctx *pulumi.Context) error {
+//			tmpJSON0, err := json.Marshal(map[string]interface{}{
+//				"config": map[string]interface{}{
+//					"auth": nil,
+//					"models": map[string]interface{}{
+//						"claude-sonnet": map[string]interface{}{
+//							"provider":       "anthropic",
+//							"max_concurrent": 8,
+//							"max_requests":   -1,
+//						},
+//					},
+//					"providers": map[string]interface{}{
+//						"anthropic": map[string]interface{}{
+//							"api_key_env": "ANTHROPIC_API_KEY",
+//						},
+//					},
+//					"governance": map[string]interface{}{
+//						"enabled":     true,
+//						"db_path":     "/var/lib/busbar/governance.db",
+//						"admin_token": busbarAdminToken,
+//					},
+//				},
+//				"providers": map[string]interface{}{
+//					"anthropic": map[string]interface{}{
+//						"protocol": "anthropic",
+//						"base_url": "https://api.anthropic.com",
+//					},
+//				},
+//			})
+//			if err != nil {
+//				return err
+//			}
+//			json0 := string(tmpJSON0)
+//			// GitOps singleton: apply the whole running config document. Manage AT MOST ONE
+//			// busbar_config per gateway. The document is the JSON payload busbar boots from,
+//			// an envelope of { config = {DeployCfg}, providers = {name = ProviderDef} }.
+//			//
+//			// Applies are live-only by default: they revert to disk truth on the next reload
+//			// or restart unless the gateway persists an overlay. Destroying this resource is a
+//			// no-op on the gateway (there is no "unapply"); it only drops Terraform's tracking.
+//			running, err := busbar.NewConfig(ctx, "running", &busbar.ConfigArgs{
+//				Document: pulumi.String(json0),
+//			})
+//			if err != nil {
+//				return err
+//			}
+//			ctx.Export("configVersion", running.ConfigVersion)
+//			return nil
+//		})
+//	}
+//
+// ```
+//
+// ## Import
+//
+// The `pulumi import` command can be used, for example:
+//
+// The config singleton has a fixed import id. The document is not recoverable
+// (GET /config is a redacted projection), so supply the matching `document` in
+// your configuration after import; only configVersion is read live.
+//
+// ```sh
+// $ pulumi import busbar:index/config:Config running config
+// ```
 type Config struct {
 	pulumi.CustomResourceState
 

@@ -4,6 +4,21 @@
 import * as pulumi from "@pulumi/pulumi";
 import * as utilities from "./utilities";
 
+/**
+ * Read-only view of the target busbar gateway: version, the compiled-in plugin proof, uptime, and topology counts (GET /api/v1/admin/info).
+ *
+ * ## Example Usage
+ *
+ * ```typescript
+ * import * as pulumi from "@pulumi/pulumi";
+ * import * as busbar from "@getbusbar/pulumi-busbar";
+ *
+ * // Read the target gateway's version, compiled-in plugin proof, and topology.
+ * const current = busbar.getInfo({});
+ * export const busbarVersion = current.then(current => current.version);
+ * export const compiledAuthModules = current.then(current => current.authModules);
+ * ```
+ */
 export function getInfo(opts?: pulumi.InvokeOptions): Promise<GetInfoResult> {
     opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts || {});
     return pulumi.runtime.invoke("busbar:index/getInfo:getInfo", {
@@ -14,22 +29,70 @@ export function getInfo(opts?: pulumi.InvokeOptions): Promise<GetInfoResult> {
  * A collection of values returned by getInfo.
  */
 export interface GetInfoResult {
+    /**
+     * Auth modules compiled into this binary (the compliance-by-compilation proof).
+     */
     readonly authModules: string[];
+    /**
+     * Whether API-applied config changes are durable across restarts (BUSBAR*CONFIG*OVERLAY set) versus live-only.
+     */
     readonly configPersistence: boolean;
+    /**
+     * Monotonic config version — 0 at boot, +1 per API config apply. Process-local; resets on restart.
+     */
     readonly configVersion: number;
+    /**
+     * Hook plugins compiled into this binary.
+     */
     readonly hookPlugins: string[];
     /**
      * The provider-assigned unique ID for this managed resource.
      */
     readonly id: string;
+    /**
+     * Number of configured model lanes.
+     */
     readonly models: number;
+    /**
+     * Number of configured pools.
+     */
     readonly pools: number;
+    /**
+     * Number of configured providers.
+     */
     readonly providers: number;
+    /**
+     * Epoch seconds of process start — the boot-epoch marker. A changed value means a restart (config_version resets), never a config revert.
+     */
     readonly startedAt: number;
+    /**
+     * Seconds since the gateway process started; null if never stamped.
+     */
     readonly uptimeSeconds: number;
+    /**
+     * busbar semantic version reported by the gateway.
+     */
     readonly version: string;
+    /**
+     * The inline SWRR floor — always true (compiled in unconditionally).
+     */
     readonly weightedFloor: boolean;
 }
+/**
+ * Read-only view of the target busbar gateway: version, the compiled-in plugin proof, uptime, and topology counts (GET /api/v1/admin/info).
+ *
+ * ## Example Usage
+ *
+ * ```typescript
+ * import * as pulumi from "@pulumi/pulumi";
+ * import * as busbar from "@getbusbar/pulumi-busbar";
+ *
+ * // Read the target gateway's version, compiled-in plugin proof, and topology.
+ * const current = busbar.getInfo({});
+ * export const busbarVersion = current.then(current => current.version);
+ * export const compiledAuthModules = current.then(current => current.authModules);
+ * ```
+ */
 export function getInfoOutput(opts?: pulumi.InvokeOutputOptions): pulumi.Output<GetInfoResult> {
     opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts || {});
     return pulumi.runtime.invokeOutput("busbar:index/getInfo:getInfo", {
