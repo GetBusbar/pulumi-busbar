@@ -2,7 +2,7 @@ name: build
 
 # Minimal CI using only first-party actions (actions/*). Proves the bridged
 # provider + Go SDK compile against the published terraform-provider-busbar
-# module. Full multi-language SDK regeneration (needs the Pulumi CLI + pulumictl)
+# module. Full multi-language SDK regeneration (needs the pinned Pulumi CLI)
 # runs from the release workflow, not here.
 on:
   push:
@@ -23,6 +23,9 @@ jobs:
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: "1.26"
+
+      - name: Test release packaging and immutable SDK tags
+        run: python3 -m unittest tests.test_release
 
       - name: Build provider (bridges against published terraform-provider-busbar)
         working-directory: provider

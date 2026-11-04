@@ -98,6 +98,22 @@ make build_sdks    # generate the nodejs, python, and go SDKs
 make drift         # regenerate everything and fail if the tree is dirty (CI)
 ```
 
+## Releases
+
+Pushing a stable `v0.x.y` or `v1.x.y` tag runs the release workflow. It generates
+SDKs with that version, builds npm and Python packages, and cross-compiles the
+provider for Linux, macOS, and Windows on amd64 and arm64. GitHub release assets
+use Pulumi's `pulumi-resource-busbar-vVERSION-OS-ARCH.tar.gz` naming, with a
+`SHA256SUMS` file. The Windows archive contains the `.exe` binary.
+
+The Go module lives in `sdk/`, so the workflow publishes `sdk/vVERSION` pointing
+to a committed generated SDK revision descended from the root release tag.
+The root tag is never moved. Matching SDK tags and provider assets can be reused
+on retries; conflicting existing tags or assets fail without replacement.
+A v2 release requires migrating `sdk/go.mod` and imports to a `/v2` module path
+before extending the release version check. Prereleases are not published by this
+workflow. npm and PyPI publication require `NPM_TOKEN` and `PYPI_API_TOKEN`.
+
 ## Differences from 1.5.5
 
 Config apply documents are treated as Pulumi secrets, including resource outputs,

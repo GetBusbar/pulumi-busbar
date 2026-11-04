@@ -1,16 +1,13 @@
-# Release workflow (UNTESTED in this scaffold — provided as a starting point).
-#
-# Publishes the provider plugin (GitHub release binaries) and the language SDKs
-# to npm, PyPI, and (for Go) a tagged module. Requires the following repo
-# secrets: NPM_TOKEN, PYPI_API_TOKEN, and (optionally) a PULUMI_ACCESS_TOKEN for
-# registry publishing. Provider plugin binaries are typically built with
-# goreleaser; wire that in before enabling this workflow.
 name: release
 
 on:
   push:
     tags:
       - "v*.*.*"
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
 
 permissions: {}
 
@@ -27,12 +24,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           path: pulumi-busbar
-
-      - name: Checkout terraform-provider-busbar
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          repository: GetBusbar/terraform-provider-busbar
-          path: terraform-provider-busbar
+          fetch-depth: 0
 
       - name: Set up Go
         uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
@@ -41,7 +33,11 @@ jobs:
 
       - name: Set version from tag
         id: version
-        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+        working-directory: pulumi-busbar
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          python3 scripts/release.py validate "$version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Install pinned Pulumi CLI
         working-directory: pulumi-busbar
@@ -53,39 +49,63 @@ jobs:
 
       - name: Build provider + SDKs
         working-directory: pulumi-busbar
-        run: make build VERSION=${{ steps.version.outputs.version }}
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+          GOMAXPROCS: "2"
+          GOFLAGS: "-p=2"
+        run: |
+          make build VERSION="$RELEASE_VERSION"
+          python3 scripts/release.py prepare "$RELEASE_VERSION"
+          python3 scripts/release.py archives "$RELEASE_VERSION"
 
-      # --- Publish SDKs ---------------------------------------------------
+      # Build every package before publishing any assets or SDKs.
       - name: Set up Node
         uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "20.x"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Publish npm package
+      - name: Build npm package
         working-directory: pulumi-busbar/sdk/nodejs
         run: |
-          sed -i "s/\${VERSION}/${{ steps.version.outputs.version }}/" package.json
           npm install
-          npx tsc
-          npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          npm pack
 
       - name: Set up Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
           python-version: "3.12"
 
-      - name: Publish PyPI package
+      - name: Build PyPI package
         working-directory: pulumi-busbar/sdk/python
         run: |
           python -m pip install build twine
           python -m build
-          twine upload dist/*
+          twine check dist/*
+
+      - name: Publish provider archives and checksums
+        working-directory: pulumi-busbar
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: python3 scripts/release.py publish-provider "$RELEASE_VERSION"
+
+      - name: Commit and publish generated Go SDK tag
+        working-directory: pulumi-busbar
+        env:
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
+        run: python3 scripts/release.py publish-sdk "$RELEASE_VERSION"
+
+      - name: Publish npm package
+        working-directory: pulumi-busbar/sdk/nodejs
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish ./*.tgz --access public
+
+      - name: Publish PyPI package
+        working-directory: pulumi-busbar/sdk/python
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-
-      # The Go SDK is consumed directly from the tagged git module
-      # (github.com/getbusbar/pulumi-busbar/sdk/go) — no separate publish step.
+        run: twine upload dist/*

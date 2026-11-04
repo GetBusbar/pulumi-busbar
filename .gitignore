@@ -1,5 +1,7 @@
 # Build output
 /bin/
+/dist/
+sdk/nodejs/*.tgz
 *.exe
 
 # Go
