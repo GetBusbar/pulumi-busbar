@@ -33,6 +33,10 @@ type Provider struct {
 // NewProvider registers a new resource with the given unique name, arguments, and options.
 func NewProvider(ctx *pulumi.Context,
 	name string, args *ProviderArgs, opts ...pulumi.ResourceOption) (*Provider, error) {
+	if args != nil {
+		argsCopy := *args
+		args = &argsCopy
+	}
 	if args == nil {
 		args = &ProviderArgs{}
 	}
@@ -57,7 +61,7 @@ func NewProvider(ctx *pulumi.Context,
 		"clientKeyPem",
 		"token",
 	})
-	opts = append(opts, secrets)
+	opts = append(append([]pulumi.ResourceOption(nil), opts...), secrets)
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource Provider
 	err := ctx.RegisterResource("pulumi:providers:busbar", name, args, &resource, opts...)

@@ -17,9 +17,9 @@ type VirtualKey struct {
 	// Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
 	AllowedPools pulumi.StringArrayOutput `pulumi:"allowedPools"`
 	// AWS-style access key id, when issueAwsCredential is true. Returned only at creation.
-	AwsAccessKeyId pulumi.StringOutput `pulumi:"awsAccessKeyId"`
+	AwsAccessKeyId pulumi.StringPtrOutput `pulumi:"awsAccessKeyId"`
 	// AWS-style secret access key, when issueAwsCredential is true. Returned only at creation; stored in state and never re-read.
-	AwsSecretAccessKey pulumi.StringOutput `pulumi:"awsSecretAccessKey"`
+	AwsSecretAccessKey pulumi.StringPtrOutput `pulumi:"awsSecretAccessKey"`
 	// Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
 	BudgetPeriod pulumi.StringOutput `pulumi:"budgetPeriod"`
 	// Epoch seconds the key was minted.
@@ -35,7 +35,7 @@ type VirtualKey struct {
 	// Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
 	RpmLimit pulumi.IntPtrOutput `pulumi:"rpmLimit"`
 	// The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
-	Secret pulumi.StringOutput `pulumi:"secret"`
+	Secret pulumi.StringPtrOutput `pulumi:"secret"`
 	// Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
 	TpmLimit pulumi.IntPtrOutput `pulumi:"tpmLimit"`
 }
@@ -51,7 +51,7 @@ func NewVirtualKey(ctx *pulumi.Context,
 		"awsSecretAccessKey",
 		"secret",
 	})
-	opts = append(opts, secrets)
+	opts = append(append([]pulumi.ResourceOption(nil), opts...), secrets)
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource VirtualKey
 	err := ctx.RegisterResource("busbar:index/virtualKey:VirtualKey", name, args, &resource, opts...)
@@ -193,7 +193,7 @@ func (i *VirtualKey) ToVirtualKeyOutputWithContext(ctx context.Context) VirtualK
 // VirtualKeyArrayInput is an input type that accepts VirtualKeyArray and VirtualKeyArrayOutput values.
 // You can construct a concrete instance of `VirtualKeyArrayInput` via:
 //
-//	VirtualKeyArray{ VirtualKeyArgs{...} }
+//	VirtualKeyArray{resource} // resource is returned by NewVirtualKey.
 type VirtualKeyArrayInput interface {
 	pulumi.Input
 
@@ -218,7 +218,7 @@ func (i VirtualKeyArray) ToVirtualKeyArrayOutputWithContext(ctx context.Context)
 // VirtualKeyMapInput is an input type that accepts VirtualKeyMap and VirtualKeyMapOutput values.
 // You can construct a concrete instance of `VirtualKeyMapInput` via:
 //
-//	VirtualKeyMap{ "key": VirtualKeyArgs{...} }
+//	VirtualKeyMap{"key": resource} // resource is returned by NewVirtualKey.
 type VirtualKeyMapInput interface {
 	pulumi.Input
 
@@ -260,13 +260,13 @@ func (o VirtualKeyOutput) AllowedPools() pulumi.StringArrayOutput {
 }
 
 // AWS-style access key id, when issueAwsCredential is true. Returned only at creation.
-func (o VirtualKeyOutput) AwsAccessKeyId() pulumi.StringOutput {
-	return o.ApplyT(func(v *VirtualKey) pulumi.StringOutput { return v.AwsAccessKeyId }).(pulumi.StringOutput)
+func (o VirtualKeyOutput) AwsAccessKeyId() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *VirtualKey) pulumi.StringPtrOutput { return v.AwsAccessKeyId }).(pulumi.StringPtrOutput)
 }
 
 // AWS-style secret access key, when issueAwsCredential is true. Returned only at creation; stored in state and never re-read.
-func (o VirtualKeyOutput) AwsSecretAccessKey() pulumi.StringOutput {
-	return o.ApplyT(func(v *VirtualKey) pulumi.StringOutput { return v.AwsSecretAccessKey }).(pulumi.StringOutput)
+func (o VirtualKeyOutput) AwsSecretAccessKey() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *VirtualKey) pulumi.StringPtrOutput { return v.AwsSecretAccessKey }).(pulumi.StringPtrOutput)
 }
 
 // Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
@@ -305,8 +305,8 @@ func (o VirtualKeyOutput) RpmLimit() pulumi.IntPtrOutput {
 }
 
 // The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
-func (o VirtualKeyOutput) Secret() pulumi.StringOutput {
-	return o.ApplyT(func(v *VirtualKey) pulumi.StringOutput { return v.Secret }).(pulumi.StringOutput)
+func (o VirtualKeyOutput) Secret() pulumi.StringPtrOutput {
+	return o.ApplyT(func(v *VirtualKey) pulumi.StringPtrOutput { return v.Secret }).(pulumi.StringPtrOutput)
 }
 
 // Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.

@@ -16,7 +16,7 @@ package busbar
 
 import (
 	_ "embed"
-	"path/filepath"
+	"path"
 
 	tfpf "github.com/GetBusbar/terraform-provider-busbar/shim/busbarshim"
 	pf "github.com/pulumi/pulumi-terraform-bridge/v3/pkg/pf/tfbridge"
@@ -35,8 +35,8 @@ const mainMod = "index"
 var bridgeMetadata []byte
 
 // upstreamLicense is the license the upstream Terraform provider is distributed
-// under (the Terraform Plugin Framework itself is MPL 2.0).
-var upstreamLicense = tfbridge.MPL20LicenseType
+// under, as recorded in the published provider module LICENSE.
+var upstreamLicense = tfbridge.Apache20LicenseType
 
 // Provider returns the tfbridge.ProviderInfo mapping the upstream
 // terraform-provider-busbar (a Terraform Plugin Framework provider, protocol 6)
@@ -59,6 +59,7 @@ func Provider() tfbridge.ProviderInfo {
 		GitHubOrg:         "GetBusbar",
 		TFProviderLicense: &upstreamLicense,
 		Version:           version.Version,
+		PluginDownloadURL: "github://api.github.com/getbusbar",
 		MetadataInfo:      tfbridge.NewProviderMetadata(bridgeMetadata),
 
 		// Environment fallbacks matching the upstream provider.
@@ -77,9 +78,24 @@ func Provider() tfbridge.ProviderInfo {
 		},
 
 		Resources: map[string]*tfbridge.ResourceInfo{
-			"busbar_virtual_key": {Tok: tfbridge.MakeResource(mainPkg, mainMod, "VirtualKey")},
-			"busbar_hook":        {Tok: tfbridge.MakeResource(mainPkg, mainMod, "Hook")},
-			"busbar_config":      {Tok: tfbridge.MakeResource(mainPkg, mainMod, "Config")},
+			"busbar_virtual_key": {
+				Tok: tfbridge.MakeResource(mainPkg, mainMod, "VirtualKey"),
+				Fields: map[string]*tfbridge.SchemaInfo{
+					"aws_access_key_id":     {MarkAsOptional: tfbridge.True()},
+					"aws_secret_access_key": {MarkAsOptional: tfbridge.True()},
+					"secret":                {MarkAsOptional: tfbridge.True()},
+				},
+			},
+			"busbar_hook": {
+				Tok:       tfbridge.MakeResource(mainPkg, mainMod, "Hook"),
+				ComputeID: tfbridge.DelegateIDField("name", mainPkg, "https://github.com/getbusbar/pulumi-busbar"),
+			},
+			"busbar_config": {
+				Tok: tfbridge.MakeResource(mainPkg, mainMod, "Config"),
+				Fields: map[string]*tfbridge.SchemaInfo{
+					"document": {Secret: tfbridge.True()},
+				},
+			},
 		},
 
 		DataSources: map[string]*tfbridge.DataSourceInfo{
@@ -96,15 +112,17 @@ func Provider() tfbridge.ProviderInfo {
 			},
 		},
 		Python: &tfbridge.PythonInfo{
-			PackageName: "pulumi_busbar",
+			PackageName:          "pulumi_busbar",
+			RespectSchemaVersion: true,
 			Requires: map[string]string{
 				"pulumi": ">=3.0.0,<4.0.0",
 			},
 		},
 		Golang: &tfbridge.GolangInfo{
-			ImportBasePath: filepath.Join(
-				"github.com/getbusbar/pulumi-busbar/sdk/go",
+			ImportBasePath: path.Join(
+				"github.com/getbusbar/pulumi-busbar/sdk",
 				tfbridge.GetModuleMajorVersion(version.Version),
+				"go",
 				"busbar",
 			),
 			GenerateResourceContainerTypes: true,

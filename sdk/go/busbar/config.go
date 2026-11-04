@@ -24,6 +24,10 @@ type Config struct {
 // NewConfig registers a new resource with the given unique name, arguments, and options.
 func NewConfig(ctx *pulumi.Context,
 	name string, args *ConfigArgs, opts ...pulumi.ResourceOption) (*Config, error) {
+	if args != nil {
+		argsCopy := *args
+		args = &argsCopy
+	}
 	if args == nil {
 		return nil, errors.New("missing one or more required arguments")
 	}
@@ -31,6 +35,13 @@ func NewConfig(ctx *pulumi.Context,
 	if args.Document == nil {
 		return nil, errors.New("invalid value for required argument 'Document'")
 	}
+	if args.Document != nil {
+		args.Document = pulumi.ToSecret(args.Document).(pulumi.StringInput)
+	}
+	secrets := pulumi.AdditionalSecretOutputs([]string{
+		"document",
+	})
+	opts = append(append([]pulumi.ResourceOption(nil), opts...), secrets)
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource Config
 	err := ctx.RegisterResource("busbar:index/config:Config", name, args, &resource, opts...)
@@ -108,7 +119,7 @@ func (i *Config) ToConfigOutputWithContext(ctx context.Context) ConfigOutput {
 // ConfigArrayInput is an input type that accepts ConfigArray and ConfigArrayOutput values.
 // You can construct a concrete instance of `ConfigArrayInput` via:
 //
-//	ConfigArray{ ConfigArgs{...} }
+//	ConfigArray{resource} // resource is returned by NewConfig.
 type ConfigArrayInput interface {
 	pulumi.Input
 
@@ -133,7 +144,7 @@ func (i ConfigArray) ToConfigArrayOutputWithContext(ctx context.Context) ConfigA
 // ConfigMapInput is an input type that accepts ConfigMap and ConfigMapOutput values.
 // You can construct a concrete instance of `ConfigMapInput` via:
 //
-//	ConfigMap{ "key": ConfigArgs{...} }
+//	ConfigMap{"key": resource} // resource is returned by NewConfig.
 type ConfigMapInput interface {
 	pulumi.Input
 

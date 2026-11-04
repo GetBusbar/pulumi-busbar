@@ -14,17 +14,17 @@ else:
     from typing_extensions import NotRequired, TypedDict, TypeAlias
 from .. import _utilities
 
-caCertPem: Optional[str]
+ca_cert_pem: Optional[str]
 """
 PEM-encoded CA certificate to trust the admin server's certificate (e.g. a private CA).
 """
 
-clientCertPem: Optional[str]
+client_cert_pem: Optional[str]
 """
 PEM-encoded client certificate for mTLS against a cert-gated admin plane.
 """
 
-clientKeyPem: Optional[str]
+client_key_pem: Optional[pulumi.Output[str]]
 """
 PEM-encoded private key for client_cert_pem.
 """
@@ -39,7 +39,7 @@ insecure: Optional[bool]
 Skip TLS certificate verification. Development only; never use against production.
 """
 
-token: Optional[str]
+token: Optional[pulumi.Output[str]]
 """
 Operator admin token, sent as the x-admin-token header. May also be set with the BUSBAR_ADMIN_TOKEN environment variable.
 """

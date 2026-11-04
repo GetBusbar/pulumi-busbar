@@ -15,6 +15,7 @@
     "attribution": "This Pulumi package is based on the [`busbar` Terraform Provider](https://github.com/GetBusbar/terraform-provider-busbar).",
     "repository": "https://github.com/getbusbar/pulumi-busbar",
     "publisher": "GetBusbar",
+    "pluginDownloadURL": "github://api.github.com/getbusbar",
     "meta": {
         "moduleFormat": "(.*)(?:/[^/]*)"
     },
@@ -27,7 +28,7 @@
         "nodejs": {
             "packageName": "@getbusbar/pulumi-busbar",
             "packageDescription": "A Pulumi package for creating and managing Busbar LLM gateway resources through its admin API.",
-            "readme": "\u003e This provider is a derived work of the [Terraform Provider](https://github.com/GetBusbar/terraform-provider-busbar)\n\u003e distributed under [MPL 2.0](https://www.mozilla.org/en-US/MPL/2.0/). If you encounter a bug or missing feature,\n\u003e first check the [`pulumi-busbar` repo](https://github.com/getbusbar/pulumi-busbar/issues); however, if that doesn't turn up anything,\n\u003e please consult the source [`terraform-provider-busbar` repo](https://github.com/GetBusbar/terraform-provider-busbar/issues).",
+            "readme": "\u003e This provider is a derived work of the [Terraform Provider](https://github.com/GetBusbar/terraform-provider-busbar)\n\u003e distributed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). If you encounter a bug or missing feature,\n\u003e first check the [`pulumi-busbar` repo](https://github.com/getbusbar/pulumi-busbar/issues); however, if that doesn't turn up anything,\n\u003e please consult the source [`terraform-provider-busbar` repo](https://github.com/GetBusbar/terraform-provider-busbar/issues).",
             "dependencies": {
                 "@pulumi/pulumi": "^3.0.0"
             },
@@ -39,10 +40,11 @@
         },
         "python": {
             "packageName": "pulumi_busbar",
+            "respectSchemaVersion": true,
             "requires": {
                 "pulumi": "\u003e=3.0.0,\u003c4.0.0"
             },
-            "readme": "\u003e This provider is a derived work of the [Terraform Provider](https://github.com/GetBusbar/terraform-provider-busbar)\n\u003e distributed under [MPL 2.0](https://www.mozilla.org/en-US/MPL/2.0/). If you encounter a bug or missing feature,\n\u003e first check the [`pulumi-busbar` repo](https://github.com/getbusbar/pulumi-busbar/issues); however, if that doesn't turn up anything,\n\u003e please consult the source [`terraform-provider-busbar` repo](https://github.com/GetBusbar/terraform-provider-busbar/issues).",
+            "readme": "\u003e This provider is a derived work of the [Terraform Provider](https://github.com/GetBusbar/terraform-provider-busbar)\n\u003e distributed under [Apache 2.0](https://www.apache.org/licenses/LICENSE-2.0.html). If you encounter a bug or missing feature,\n\u003e first check the [`pulumi-busbar` repo](https://github.com/getbusbar/pulumi-busbar/issues); however, if that doesn't turn up anything,\n\u003e please consult the source [`terraform-provider-busbar` repo](https://github.com/GetBusbar/terraform-provider-busbar/issues).",
             "compatibility": "tfbridge20",
             "pyproject": {}
         }
@@ -168,7 +170,8 @@
                 },
                 "document": {
                     "type": "string",
-                    "description": "The full config apply document as a JSON string: {\"config\": {DeployCfg}, \"providers\": {name: ProviderDef}}. The \u003cspan pulumi-lang-nodejs=\"`config`\" pulumi-lang-dotnet=\"`Config`\" pulumi-lang-go=\"`config`\" pulumi-lang-python=\"`config`\" pulumi-lang-yaml=\"`config`\" pulumi-lang-java=\"`config`\" pulumi-lang-hcl=\"`config`\"\u003e`config`\u003c/span\u003e key is required; \u003cspan pulumi-lang-nodejs=\"`providers`\" pulumi-lang-dotnet=\"`Providers`\" pulumi-lang-go=\"`providers`\" pulumi-lang-python=\"`providers`\" pulumi-lang-yaml=\"`providers`\" pulumi-lang-java=\"`providers`\" pulumi-lang-hcl=\"`providers`\"\u003e`providers`\u003c/span\u003e is optional. This is the write model (the boot-file shape), NOT the redacted read projection returned by GET /config."
+                    "description": "The full config apply document as a JSON string: {\"config\": {DeployCfg}, \"providers\": {name: ProviderDef}}. The \u003cspan pulumi-lang-nodejs=\"`config`\" pulumi-lang-dotnet=\"`Config`\" pulumi-lang-go=\"`config`\" pulumi-lang-python=\"`config`\" pulumi-lang-yaml=\"`config`\" pulumi-lang-java=\"`config`\" pulumi-lang-hcl=\"`config`\"\u003e`config`\u003c/span\u003e key is required; \u003cspan pulumi-lang-nodejs=\"`providers`\" pulumi-lang-dotnet=\"`Providers`\" pulumi-lang-go=\"`providers`\" pulumi-lang-python=\"`providers`\" pulumi-lang-yaml=\"`providers`\" pulumi-lang-java=\"`providers`\" pulumi-lang-hcl=\"`providers`\"\u003e`providers`\u003c/span\u003e is optional. This is the write model (the boot-file shape), NOT the redacted read projection returned by GET /config.",
+                    "secret": true
                 }
             },
             "required": [
@@ -178,7 +181,8 @@
             "inputProperties": {
                 "document": {
                     "type": "string",
-                    "description": "The full config apply document as a JSON string: {\"config\": {DeployCfg}, \"providers\": {name: ProviderDef}}. The \u003cspan pulumi-lang-nodejs=\"`config`\" pulumi-lang-dotnet=\"`Config`\" pulumi-lang-go=\"`config`\" pulumi-lang-python=\"`config`\" pulumi-lang-yaml=\"`config`\" pulumi-lang-java=\"`config`\" pulumi-lang-hcl=\"`config`\"\u003e`config`\u003c/span\u003e key is required; \u003cspan pulumi-lang-nodejs=\"`providers`\" pulumi-lang-dotnet=\"`Providers`\" pulumi-lang-go=\"`providers`\" pulumi-lang-python=\"`providers`\" pulumi-lang-yaml=\"`providers`\" pulumi-lang-java=\"`providers`\" pulumi-lang-hcl=\"`providers`\"\u003e`providers`\u003c/span\u003e is optional. This is the write model (the boot-file shape), NOT the redacted read projection returned by GET /config."
+                    "description": "The full config apply document as a JSON string: {\"config\": {DeployCfg}, \"providers\": {name: ProviderDef}}. The \u003cspan pulumi-lang-nodejs=\"`config`\" pulumi-lang-dotnet=\"`Config`\" pulumi-lang-go=\"`config`\" pulumi-lang-python=\"`config`\" pulumi-lang-yaml=\"`config`\" pulumi-lang-java=\"`config`\" pulumi-lang-hcl=\"`config`\"\u003e`config`\u003c/span\u003e key is required; \u003cspan pulumi-lang-nodejs=\"`providers`\" pulumi-lang-dotnet=\"`Providers`\" pulumi-lang-go=\"`providers`\" pulumi-lang-python=\"`providers`\" pulumi-lang-yaml=\"`providers`\" pulumi-lang-java=\"`providers`\" pulumi-lang-hcl=\"`providers`\"\u003e`providers`\u003c/span\u003e is optional. This is the write model (the boot-file shape), NOT the redacted read projection returned by GET /config.",
+                    "secret": true
                 }
             },
             "requiredInputs": [
@@ -193,7 +197,8 @@
                     },
                     "document": {
                         "type": "string",
-                        "description": "The full config apply document as a JSON string: {\"config\": {DeployCfg}, \"providers\": {name: ProviderDef}}. The \u003cspan pulumi-lang-nodejs=\"`config`\" pulumi-lang-dotnet=\"`Config`\" pulumi-lang-go=\"`config`\" pulumi-lang-python=\"`config`\" pulumi-lang-yaml=\"`config`\" pulumi-lang-java=\"`config`\" pulumi-lang-hcl=\"`config`\"\u003e`config`\u003c/span\u003e key is required; \u003cspan pulumi-lang-nodejs=\"`providers`\" pulumi-lang-dotnet=\"`Providers`\" pulumi-lang-go=\"`providers`\" pulumi-lang-python=\"`providers`\" pulumi-lang-yaml=\"`providers`\" pulumi-lang-java=\"`providers`\" pulumi-lang-hcl=\"`providers`\"\u003e`providers`\u003c/span\u003e is optional. This is the write model (the boot-file shape), NOT the redacted read projection returned by GET /config."
+                        "description": "The full config apply document as a JSON string: {\"config\": {DeployCfg}, \"providers\": {name: ProviderDef}}. The \u003cspan pulumi-lang-nodejs=\"`config`\" pulumi-lang-dotnet=\"`Config`\" pulumi-lang-go=\"`config`\" pulumi-lang-python=\"`config`\" pulumi-lang-yaml=\"`config`\" pulumi-lang-java=\"`config`\" pulumi-lang-hcl=\"`config`\"\u003e`config`\u003c/span\u003e key is required; \u003cspan pulumi-lang-nodejs=\"`providers`\" pulumi-lang-dotnet=\"`Providers`\" pulumi-lang-go=\"`providers`\" pulumi-lang-python=\"`providers`\" pulumi-lang-yaml=\"`providers`\" pulumi-lang-java=\"`providers`\" pulumi-lang-hcl=\"`providers`\"\u003e`providers`\u003c/span\u003e is optional. This is the write model (the boot-file shape), NOT the redacted read projection returned by GET /config.",
+                        "secret": true
                     }
                 },
                 "type": "object"
@@ -450,13 +455,10 @@
                 }
             },
             "required": [
-                "awsAccessKeyId",
-                "awsSecretAccessKey",
                 "budgetPeriod",
                 "createdAt",
                 "enabled",
-                "name",
-                "secret"
+                "name"
             ],
             "inputProperties": {
                 "allowedPools": {

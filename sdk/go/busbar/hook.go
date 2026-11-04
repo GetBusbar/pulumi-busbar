@@ -232,7 +232,7 @@ func (i *Hook) ToHookOutputWithContext(ctx context.Context) HookOutput {
 // HookArrayInput is an input type that accepts HookArray and HookArrayOutput values.
 // You can construct a concrete instance of `HookArrayInput` via:
 //
-//	HookArray{ HookArgs{...} }
+//	HookArray{resource} // resource is returned by NewHook.
 type HookArrayInput interface {
 	pulumi.Input
 
@@ -257,7 +257,7 @@ func (i HookArray) ToHookArrayOutputWithContext(ctx context.Context) HookArrayOu
 // HookMapInput is an input type that accepts HookMap and HookMapOutput values.
 // You can construct a concrete instance of `HookMapInput` via:
 //
-//	HookMap{ "key": HookArgs{...} }
+//	HookMap{"key": resource} // resource is returned by NewHook.
 type HookMapInput interface {
 	pulumi.Input
 

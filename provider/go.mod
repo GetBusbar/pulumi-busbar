@@ -2,9 +2,8 @@ module github.com/getbusbar/pulumi-busbar/provider
 
 go 1.26
 
-// Build against the local, unpublished upstream Terraform provider and the
-// local re-export shim, so we can bridge them without first publishing either
-// as a Go module. The shim's import path descends from the upstream module
+// Build against the published upstream Terraform provider and a local
+// re-export shim. The shim's import path descends from the upstream module
 // root, which lets it re-export the upstream internal/provider factory.
 
 replace github.com/GetBusbar/terraform-provider-busbar/shim => ./shim

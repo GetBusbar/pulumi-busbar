@@ -12,7 +12,8 @@ LLM gateway. It manages Busbar resources through the gateway's admin API and is 
 - **Plugin / registry reference:** `getbusbar/busbar`
 - **npm package:** `@getbusbar/pulumi-busbar`
 - **PyPI package:** `pulumi_busbar`
-- **Go module:** `github.com/getbusbar/pulumi-busbar/sdk/go/busbar`
+- **Go module:** `github.com/getbusbar/pulumi-busbar/sdk`
+- **Go package:** `github.com/getbusbar/pulumi-busbar/sdk/go/busbar`
 
 ## Installing
 
@@ -58,10 +59,10 @@ with `pulumi config set busbar:<key>` or via environment variables:
 
 | Terraform type       | Pulumi token                     |
 | -------------------- | -------------------------------- |
-| `busbar_virtual_key` | `busbar:index:VirtualKey`        |
-| `busbar_hook`        | `busbar:index:Hook`              |
-| `busbar_config`      | `busbar:index:Config`            |
-| `busbar_info` (data) | `busbar:index:getInfo` (function)|
+| `busbar_virtual_key` | `busbar:index/virtualKey:VirtualKey`        |
+| `busbar_hook`        | `busbar:index/hook:Hook`              |
+| `busbar_config`      | `busbar:index/config:Config`            |
+| `busbar_info` (data) | `busbar:index/getInfo:getInfo` (function)|
 
 ## Example (TypeScript)
 
@@ -77,12 +78,15 @@ const key = new busbar.VirtualKey("primary", {
 
 ## Building from source
 
-This repository bridges a **local, unpublished** copy of the upstream Terraform
-provider via `go.mod` `replace` directives (see `provider/go.mod` and
-`provider/shim/go.mod`). The upstream provider's implementation lives in an
+This repository bridges the published upstream Terraform provider version pinned
+in `provider/go.mod` and `provider/shim/go.mod`. Only the re-export shim uses a
+local `replace` directive. The upstream provider's implementation lives in an
 `internal/` package, so a small re-export shim
 (`provider/shim/busbarshim`) whose import path descends from the upstream module
 root is used to expose `provider.New` to the bridge.
+
+Generation requires Go 1.26 and Python 3. Python post-processing preserves SDK
+secret accessors, configuration type stubs, and package layout after regeneration.
 
 ```bash
 make provider      # build tfgen, generate schema.json, build the plugin binary
@@ -90,7 +94,17 @@ make build_sdks    # generate the nodejs, python, and go SDKs
 make drift         # regenerate everything and fail if the tree is dirty (CI)
 ```
 
+## Differences from 1.5.5
+
+Config apply documents are treated as Pulumi secrets, including resource outputs,
+because the boot-file payload can contain inline provider credentials. The JSON
+sent to the admin API is unchanged. Token and client-private-key config accessors
+also return secret Pulumi outputs, including the environment-token fallback.
+Pass these outputs directly to resource inputs; use `apply`/`ApplyT` when deriving
+values instead of treating them as plain strings. This keeps derived stack outputs
+encrypted.
+
 ## License
 
 Apache-2.0. See [LICENSE](./LICENSE). The upstream Terraform provider is
-distributed under MPL-2.0.
+distributed under Apache-2.0.

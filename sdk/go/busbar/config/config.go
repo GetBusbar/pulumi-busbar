@@ -22,8 +22,8 @@ func GetClientCertPem(ctx *pulumi.Context) string {
 }
 
 // PEM-encoded private key for client_cert_pem.
-func GetClientKeyPem(ctx *pulumi.Context) string {
-	return config.Get(ctx, "busbar:clientKeyPem")
+func GetClientKeyPem(ctx *pulumi.Context) pulumi.StringOutput {
+	return config.GetSecret(ctx, "busbar:clientKeyPem")
 }
 
 // Admin listener URL, e.g. https://busbar-admin.internal:8081. May also be set with the BUSBAR_ENDPOINT environment variable.
@@ -45,8 +45,8 @@ func GetInsecure(ctx *pulumi.Context) bool {
 }
 
 // Operator admin token, sent as the x-admin-token header. May also be set with the BUSBAR_ADMIN_TOKEN environment variable.
-func GetToken(ctx *pulumi.Context) string {
-	v, err := config.Try(ctx, "busbar:token")
+func GetToken(ctx *pulumi.Context) pulumi.StringOutput {
+	v, err := config.TrySecret(ctx, "busbar:token")
 	if err == nil {
 		return v
 	}
@@ -54,5 +54,5 @@ func GetToken(ctx *pulumi.Context) string {
 	if d := internal.GetEnvOrDefault(nil, nil, "BUSBAR_ADMIN_TOKEN"); d != nil {
 		value = d.(string)
 	}
-	return value
+	return pulumi.ToSecret(value).(pulumi.StringOutput)
 }

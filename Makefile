@@ -45,12 +45,15 @@ build_sdks:: build_nodejs build_python build_go ## Generate all language SDKs
 
 build_nodejs:: tfgen ## Generate the TypeScript/JavaScript SDK
 	$(BIN)/$(TFGEN) nodejs --out sdk/nodejs
+	python3 scripts/prepare_nodejs.py sdk/nodejs
 
 build_python:: tfgen ## Generate the Python SDK
 	$(BIN)/$(TFGEN) python --out sdk/python
+	python3 scripts/prepare_python.py sdk/python
 
 build_go:: tfgen ## Generate the Go SDK
 	$(BIN)/$(TFGEN) go --out sdk/go
+	python3 scripts/prepare_go.py sdk/go
 
 # ---------------------------------------------------------------------------
 # Housekeeping.
@@ -66,6 +69,7 @@ lint:: ## Vet the provider module
 
 drift:: build ## Regenerate everything and fail if the tree changed (CI drift check)
 	git diff --exit-code
+	@drift_status="$$(git status --porcelain --untracked-files=normal)"; if [ -n "$$drift_status" ]; then printf '%s\n' "$$drift_status"; exit 1; fi
 
 build:: provider build_sdks ## Alias: build provider + all SDKs
 

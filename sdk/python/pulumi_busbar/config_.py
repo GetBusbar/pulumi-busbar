@@ -132,8 +132,10 @@ class Config(pulumi.CustomResource):
 
             if document is None and not opts.urn:
                 raise TypeError("Missing required property 'document'")
-            __props__.__dict__["document"] = document
+            __props__.__dict__["document"] = None if document is None else pulumi.Output.secret(document)
             __props__.__dict__["config_version"] = None
+        secret_opts = pulumi.ResourceOptions(additional_secret_outputs=["document"])
+        opts = pulumi.ResourceOptions.merge(opts, secret_opts)
         super(Config, __self__).__init__(
             'busbar:index/config:Config',
             resource_name,

@@ -61,10 +61,12 @@ export class Config extends pulumi.CustomResource {
             if (args?.document === undefined && !opts.urn) {
                 throw new Error("Missing required property 'document'");
             }
-            resourceInputs["document"] = args?.document;
+            resourceInputs["document"] = args?.document ? pulumi.secret(args.document) : undefined;
             resourceInputs["configVersion"] = undefined /*out*/;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
+        const secretOpts = { additionalSecretOutputs: ["document"] };
+        opts = pulumi.mergeOptions(opts, secretOpts);
         super(Config.__pulumiType, name, resourceInputs, opts);
     }
 }

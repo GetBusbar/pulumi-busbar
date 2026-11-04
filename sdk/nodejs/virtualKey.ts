@@ -39,11 +39,11 @@ export class VirtualKey extends pulumi.CustomResource {
     /**
      * AWS-style access key id, when issueAwsCredential is true. Returned only at creation.
      */
-    declare public /*out*/ readonly awsAccessKeyId: pulumi.Output<string>;
+    declare public /*out*/ readonly awsAccessKeyId: pulumi.Output<string | undefined>;
     /**
      * AWS-style secret access key, when issueAwsCredential is true. Returned only at creation; stored in state and never re-read.
      */
-    declare public /*out*/ readonly awsSecretAccessKey: pulumi.Output<string>;
+    declare public /*out*/ readonly awsSecretAccessKey: pulumi.Output<string | undefined>;
     /**
      * Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
      */
@@ -75,7 +75,7 @@ export class VirtualKey extends pulumi.CustomResource {
     /**
      * The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
      */
-    declare public /*out*/ readonly secret: pulumi.Output<string>;
+    declare public /*out*/ readonly secret: pulumi.Output<string | undefined>;
     /**
      * Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
      */

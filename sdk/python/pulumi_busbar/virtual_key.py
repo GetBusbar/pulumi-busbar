@@ -489,7 +489,7 @@ class VirtualKey(pulumi.CustomResource):
 
     @_builtins.property
     @pulumi.getter(name="awsAccessKeyId")
-    def aws_access_key_id(self) -> pulumi.Output[_builtins.str]:
+    def aws_access_key_id(self) -> pulumi.Output[Optional[_builtins.str]]:
         """
         AWS-style access key id, when issue_aws_credential is true. Returned only at creation.
         """
@@ -497,7 +497,7 @@ class VirtualKey(pulumi.CustomResource):
 
     @_builtins.property
     @pulumi.getter(name="awsSecretAccessKey")
-    def aws_secret_access_key(self) -> pulumi.Output[_builtins.str]:
+    def aws_secret_access_key(self) -> pulumi.Output[Optional[_builtins.str]]:
         """
         AWS-style secret access key, when issue_aws_credential is true. Returned only at creation; stored in state and never re-read.
         """
@@ -561,7 +561,7 @@ class VirtualKey(pulumi.CustomResource):
 
     @_builtins.property
     @pulumi.getter
-    def secret(self) -> pulumi.Output[_builtins.str]:
+    def secret(self) -> pulumi.Output[Optional[_builtins.str]]:
         """
         The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
         """

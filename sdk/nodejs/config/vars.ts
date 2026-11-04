@@ -32,10 +32,10 @@ Object.defineProperty(exports, "clientCertPem", {
 /**
  * PEM-encoded private key for client_cert_pem.
  */
-export declare const clientKeyPem: string | undefined;
+export declare const clientKeyPem: pulumi.Output<string> | undefined;
 Object.defineProperty(exports, "clientKeyPem", {
     get() {
-        return __config.get("clientKeyPem");
+        return __config.getSecret("clientKeyPem");
     },
     enumerable: true,
 });
@@ -65,10 +65,13 @@ Object.defineProperty(exports, "insecure", {
 /**
  * Operator admin token, sent as the x-admin-token header. May also be set with the BUSBAR_ADMIN_TOKEN environment variable.
  */
-export declare const token: string | undefined;
+export declare const token: pulumi.Output<string> | undefined;
 Object.defineProperty(exports, "token", {
     get() {
-        return __config.get("token") ?? utilities.getEnv("BUSBAR_ADMIN_TOKEN");
+        const value = __config.getSecret("token");
+        if (value !== undefined) { return value; }
+        const env = utilities.getEnv("BUSBAR_ADMIN_TOKEN");
+        return env === undefined ? undefined : pulumi.secret(env);
     },
     enumerable: true,
 });

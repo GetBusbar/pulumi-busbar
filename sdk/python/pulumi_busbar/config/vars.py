@@ -35,11 +35,11 @@ class _ExportableConfig(types.ModuleType):
         return __config__.get('clientCertPem')
 
     @_builtins.property
-    def client_key_pem(self) -> Optional[str]:
+    def client_key_pem(self) -> Optional[pulumi.Output[str]]:
         """
         PEM-encoded private key for client_cert_pem.
         """
-        return __config__.get('clientKeyPem')
+        return __config__.get_secret('clientKeyPem')
 
     @_builtins.property
     def endpoint(self) -> Optional[str]:
@@ -56,9 +56,13 @@ class _ExportableConfig(types.ModuleType):
         return __config__.get_bool('insecure')
 
     @_builtins.property
-    def token(self) -> Optional[str]:
+    def token(self) -> Optional[pulumi.Output[str]]:
         """
         Operator admin token, sent as the x-admin-token header. May also be set with the BUSBAR_ADMIN_TOKEN environment variable.
         """
-        return __config__.get('token') or _utilities.get_env('BUSBAR_ADMIN_TOKEN')
+        value = __config__.get_secret('token')
+        if value is not None:
+            return value
+        value = _utilities.get_env('BUSBAR_ADMIN_TOKEN')
+        return pulumi.Output.secret(value) if value is not None else None
 
