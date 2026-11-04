@@ -65,9 +65,9 @@ type VirtualKey struct {
 
 	// Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
 	AllowedPools pulumi.StringArrayOutput `pulumi:"allowedPools"`
-	// AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
+	// AWS-style access key id, when `issueAwsCredential` is true. Returned only at creation.
 	AwsAccessKeyId pulumi.StringPtrOutput `pulumi:"awsAccessKeyId"`
-	// AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
+	// AWS-style secret access key, when `issueAwsCredential` is true. Returned only at creation; stored in state and never re-read.
 	AwsSecretAccessKey pulumi.StringPtrOutput `pulumi:"awsSecretAccessKey"`
 	// Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
 	BudgetPeriod pulumi.StringOutput `pulumi:"budgetPeriod"`
@@ -126,9 +126,9 @@ func GetVirtualKey(ctx *pulumi.Context,
 type virtualKeyState struct {
 	// Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
 	AllowedPools []string `pulumi:"allowedPools"`
-	// AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
+	// AWS-style access key id, when `issueAwsCredential` is true. Returned only at creation.
 	AwsAccessKeyId *string `pulumi:"awsAccessKeyId"`
-	// AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
+	// AWS-style secret access key, when `issueAwsCredential` is true. Returned only at creation; stored in state and never re-read.
 	AwsSecretAccessKey *string `pulumi:"awsSecretAccessKey"`
 	// Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
 	BudgetPeriod *string `pulumi:"budgetPeriod"`
@@ -153,9 +153,9 @@ type virtualKeyState struct {
 type VirtualKeyState struct {
 	// Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
 	AllowedPools pulumi.StringArrayInput
-	// AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
+	// AWS-style access key id, when `issueAwsCredential` is true. Returned only at creation.
 	AwsAccessKeyId pulumi.StringPtrInput
-	// AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
+	// AWS-style secret access key, when `issueAwsCredential` is true. Returned only at creation; stored in state and never re-read.
 	AwsSecretAccessKey pulumi.StringPtrInput
 	// Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
 	BudgetPeriod pulumi.StringPtrInput
@@ -308,12 +308,12 @@ func (o VirtualKeyOutput) AllowedPools() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.StringArrayOutput { return v.AllowedPools }).(pulumi.StringArrayOutput)
 }
 
-// AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
+// AWS-style access key id, when `issueAwsCredential` is true. Returned only at creation.
 func (o VirtualKeyOutput) AwsAccessKeyId() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.StringPtrOutput { return v.AwsAccessKeyId }).(pulumi.StringPtrOutput)
 }
 
-// AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
+// AWS-style secret access key, when `issueAwsCredential` is true. Returned only at creation; stored in state and never re-read.
 func (o VirtualKeyOutput) AwsSecretAccessKey() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.StringPtrOutput { return v.AwsSecretAccessKey }).(pulumi.StringPtrOutput)
 }

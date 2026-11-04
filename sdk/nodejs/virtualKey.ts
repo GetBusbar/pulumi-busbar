@@ -71,11 +71,11 @@ export class VirtualKey extends pulumi.CustomResource {
      */
     declare public readonly allowedPools: pulumi.Output<string[] | undefined>;
     /**
-     * AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
+     * AWS-style access key id, when `issueAwsCredential` is true. Returned only at creation.
      */
     declare public /*out*/ readonly awsAccessKeyId: pulumi.Output<string | undefined>;
     /**
-     * AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
+     * AWS-style secret access key, when `issueAwsCredential` is true. Returned only at creation; stored in state and never re-read.
      */
     declare public /*out*/ readonly awsSecretAccessKey: pulumi.Output<string | undefined>;
     /**
@@ -171,11 +171,11 @@ export interface VirtualKeyState {
      */
     allowedPools?: pulumi.Input<pulumi.Input<string>[] | undefined>;
     /**
-     * AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
+     * AWS-style access key id, when `issueAwsCredential` is true. Returned only at creation.
      */
     awsAccessKeyId?: pulumi.Input<string | undefined>;
     /**
-     * AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
+     * AWS-style secret access key, when `issueAwsCredential` is true. Returned only at creation; stored in state and never re-read.
      */
     awsSecretAccessKey?: pulumi.Input<string | undefined>;
     /**

@@ -48,7 +48,7 @@ import (
 //					"governance": map[string]interface{}{
 //						"enabled":     true,
 //						"db_path":     "/var/lib/busbar/governance.db",
-//						"admin_token": busbarAdminToken,
+//						"admin_token": "replace-with-your-admin-token",
 //					},
 //				},
 //				"providers": map[string]interface{}{

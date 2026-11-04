@@ -15,6 +15,7 @@
 package busbar
 
 import (
+	"bytes"
 	_ "embed"
 	"path"
 
@@ -33,6 +34,9 @@ const mainMod = "index"
 
 //go:embed cmd/pulumi-resource-busbar/bridge-metadata.json
 var bridgeMetadata []byte
+
+//go:embed docs/info.md
+var infoDocs []byte
 
 // upstreamLicense is the license the upstream Terraform provider is distributed
 // under, as recorded in the published provider module LICENSE.
@@ -61,6 +65,11 @@ func Provider() tfbridge.ProviderInfo {
 		Version:           version.Version,
 		PluginDownloadURL: "github://api.github.com/getbusbar",
 		MetadataInfo:      tfbridge.NewProviderMetadata(bridgeMetadata),
+		DocRules: &tfbridge.DocRuleInfo{
+			EditRules: func(defaults []tfbridge.DocsEdit) []tfbridge.DocsEdit {
+				return append(defaults, tfbridge.DocsEdit{Path: "*", Edit: prepareUpstreamDocs})
+			},
+		},
 
 		// Environment fallbacks matching the upstream provider.
 		Config: map[string]*tfbridge.SchemaInfo{
@@ -99,7 +108,10 @@ func Provider() tfbridge.ProviderInfo {
 		},
 
 		DataSources: map[string]*tfbridge.DataSourceInfo{
-			"busbar_info": {Tok: tfbridge.MakeDataSource(mainPkg, mainMod, "getInfo")},
+			"busbar_info": {
+				Tok:  tfbridge.MakeDataSource(mainPkg, mainMod, "getInfo"),
+				Docs: &tfbridge.DocInfo{Markdown: infoDocs},
+			},
 		},
 
 		JavaScript: &tfbridge.JavaScriptInfo{
@@ -132,4 +144,27 @@ func Provider() tfbridge.ProviderInfo {
 	info.SetAutonaming(255, "-")
 
 	return info
+}
+
+// prepareUpstreamDocs runs before the bridge translates HCL examples and parses
+// Markdown. Keep examples self-contained and literal API names out of emphasis.
+func prepareUpstreamDocs(_ string, content []byte) ([]byte, error) {
+	content = bytes.ReplaceAll(content, []byte("var.busbar_admin_token"), []byte(`"replace-with-your-admin-token"`))
+	lines := bytes.Split(content, []byte("\n"))
+	inCode := false
+	for i, line := range lines {
+		if bytes.HasPrefix(bytes.TrimSpace(line), []byte("```")) {
+			inCode = !inCode
+			continue
+		}
+		if inCode {
+			continue
+		}
+		for _, name := range []string{"BUSBAR_CONFIG_OVERLAY", "issue_aws_credential"} {
+			line = bytes.ReplaceAll(line, []byte(name), []byte("`"+name+"`"))
+			line = bytes.ReplaceAll(line, []byte("``"+name+"``"), []byte("`"+name+"`"))
+		}
+		lines[i] = line
+	}
+	return bytes.Join(lines, []byte("\n")), nil
 }

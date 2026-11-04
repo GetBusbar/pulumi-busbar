@@ -124,7 +124,7 @@ class Config(pulumi.CustomResource):
                 "governance": {
                     "enabled": True,
                     "db_path": "/var/lib/busbar/governance.db",
-                    "admin_token": busbar_admin_token,
+                    "admin_token": "replace-with-your-admin-token",
                 },
             },
             "providers": {
@@ -195,7 +195,7 @@ class Config(pulumi.CustomResource):
                 "governance": {
                     "enabled": True,
                     "db_path": "/var/lib/busbar/governance.db",
-                    "admin_token": busbar_admin_token,
+                    "admin_token": "replace-with-your-admin-token",
                 },
             },
             "providers": {

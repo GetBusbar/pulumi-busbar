@@ -156,8 +156,8 @@ class _VirtualKeyState:
         Input properties used for looking up and filtering VirtualKey resources.
 
         :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
-        :param pulumi.Input[_builtins.str] aws_access_key_id: AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
-        :param pulumi.Input[_builtins.str] aws_secret_access_key: AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
+        :param pulumi.Input[_builtins.str] aws_access_key_id: AWS-style access key id, when `issue_aws_credential` is true. Returned only at creation.
+        :param pulumi.Input[_builtins.str] aws_secret_access_key: AWS-style secret access key, when `issue_aws_credential` is true. Returned only at creation; stored in state and never re-read.
         :param pulumi.Input[_builtins.str] budget_period: Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
         :param pulumi.Input[_builtins.int] created_at: Epoch seconds the key was minted.
         :param pulumi.Input[_builtins.bool] enabled: Whether the key currently resolves. A key is created enabled; disable it out-of-band via the admin API.
@@ -209,7 +209,7 @@ class _VirtualKeyState:
     @pulumi.getter(name="awsAccessKeyId")
     def aws_access_key_id(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
-        AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
+        AWS-style access key id, when `issue_aws_credential` is true. Returned only at creation.
         """
         return pulumi.get(self, "aws_access_key_id")
 
@@ -221,7 +221,7 @@ class _VirtualKeyState:
     @pulumi.getter(name="awsSecretAccessKey")
     def aws_secret_access_key(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
-        AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
+        AWS-style secret access key, when `issue_aws_credential` is true. Returned only at creation; stored in state and never re-read.
         """
         return pulumi.get(self, "aws_secret_access_key")
 
@@ -511,8 +511,8 @@ class VirtualKey(pulumi.CustomResource):
         :param pulumi.Input[str] id: The unique provider ID of the resource to lookup.
         :param pulumi.ResourceOptions opts: Options for the resource.
         :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
-        :param pulumi.Input[_builtins.str] aws_access_key_id: AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
-        :param pulumi.Input[_builtins.str] aws_secret_access_key: AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
+        :param pulumi.Input[_builtins.str] aws_access_key_id: AWS-style access key id, when `issue_aws_credential` is true. Returned only at creation.
+        :param pulumi.Input[_builtins.str] aws_secret_access_key: AWS-style secret access key, when `issue_aws_credential` is true. Returned only at creation; stored in state and never re-read.
         :param pulumi.Input[_builtins.str] budget_period: Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
         :param pulumi.Input[_builtins.int] created_at: Epoch seconds the key was minted.
         :param pulumi.Input[_builtins.bool] enabled: Whether the key currently resolves. A key is created enabled; disable it out-of-band via the admin API.
@@ -553,7 +553,7 @@ class VirtualKey(pulumi.CustomResource):
     @pulumi.getter(name="awsAccessKeyId")
     def aws_access_key_id(self) -> pulumi.Output[Optional[_builtins.str]]:
         """
-        AWS-style access key id, when issue*aws*credential is true. Returned only at creation.
+        AWS-style access key id, when `issue_aws_credential` is true. Returned only at creation.
         """
         return pulumi.get(self, "aws_access_key_id")
 
@@ -561,7 +561,7 @@ class VirtualKey(pulumi.CustomResource):
     @pulumi.getter(name="awsSecretAccessKey")
     def aws_secret_access_key(self) -> pulumi.Output[Optional[_builtins.str]]:
         """
-        AWS-style secret access key, when issue*aws*credential is true. Returned only at creation; stored in state and never re-read.
+        AWS-style secret access key, when `issue_aws_credential` is true. Returned only at creation; stored in state and never re-read.
         """
         return pulumi.get(self, "aws_secret_access_key")
 
