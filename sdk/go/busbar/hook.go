@@ -108,6 +108,10 @@ type Hook struct {
 // NewHook registers a new resource with the given unique name, arguments, and options.
 func NewHook(ctx *pulumi.Context,
 	name string, args *HookArgs, opts ...pulumi.ResourceOption) (*Hook, error) {
+	if args != nil {
+		argsCopy := *args
+		args = &argsCopy
+	}
 	if args == nil {
 		return nil, errors.New("missing one or more required arguments")
 	}
@@ -124,7 +128,7 @@ func NewHook(ctx *pulumi.Context,
 	secrets := pulumi.AdditionalSecretOutputs([]string{
 		"settings",
 	})
-	opts = append(opts, secrets)
+	opts = append(append([]pulumi.ResourceOption(nil), opts...), secrets)
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource Hook
 	err := ctx.RegisterResource("busbar:index/hook:Hook", name, args, &resource, opts...)

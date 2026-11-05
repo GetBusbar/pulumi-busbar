@@ -1,4 +1,4 @@
-"""Preserve secret values in generated Go config accessors."""
+"""Preserve secrets and caller-owned inputs in generated Go SDKs."""
 from pathlib import Path
 import sys
 
@@ -18,7 +18,8 @@ def prepare(directory):
     source = source[:start] + source[start:].replace(
         "return value", "return pulumi.ToSecret(value).(pulumi.StringOutput)")
     path.write_text(source, encoding="utf-8")
-    for name, filename in (("Provider", "provider.go"), ("Config", "config.go")):
+    for name, filename in (("Provider", "provider.go"), ("Config", "config.go"),
+                           ("Hook", "hook.go")):
         path = Path(directory) / "busbar" / filename
         source = path.read_text(encoding="utf-8")
         anchor = (f"name string, args *{name}Args, opts ...pulumi.ResourceOption) "
@@ -28,7 +29,7 @@ def prepare(directory):
                        "\t\targsCopy := *args\n\t\targs = &argsCopy\n\t}\n\tif args == nil {")
         source = source.replace(anchor, replacement)
         path.write_text(source, encoding="utf-8")
-    for filename in ("provider.go", "config.go", "virtualKey.go"):
+    for filename in ("provider.go", "config.go", "hook.go", "virtualKey.go"):
         path = Path(directory) / "busbar" / filename
         source = path.read_text(encoding="utf-8").replace(
             "opts = append(opts, secrets)",
