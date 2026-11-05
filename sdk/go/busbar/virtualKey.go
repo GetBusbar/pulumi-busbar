@@ -11,7 +11,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-// A governance virtual key: a mintable, revocable credential with budget and rate caps scoped to a set of pools (POST/GET/PATCH/DELETE /api/v1/admin/keys). The plaintext secret is returned by busbar only once, at creation, and is stored in state as a sensitive value; refreshes update metadata (budget/limits/enabled) but never the secret. Requires `governance:` to be enabled on the gateway.
+// A signed, expiring busbar virtual key scoped to pools. The bearer token is returned once at creation and stored as a sensitive value. Budget and rate limits belong to gateway groups in busbar 1.5 and later; legacy key limit attributes are rejected.
 //
 // ## Example Usage
 //
@@ -27,15 +27,10 @@ import (
 //
 //	func main() {
 //		pulumi.Run(func(ctx *pulumi.Context) error {
-//			// Mint a governance virtual key with a daily budget and a request-rate cap,
-//			// scoped to the "smart" pool. The plaintext secret is returned only once, at
-//			// creation, and stored in state as a sensitive value.
+//			// Mint a signed key scoped to the smart pool. Budget and rate limits live on
+//			// gateway groups in busbar 1.5 and later, never on individual keys.
 //			app, err := busbar.NewVirtualKey(ctx, "app", &busbar.VirtualKeyArgs{
-//				Name:           pulumi.String("checkout-service"),
-//				BudgetPeriod:   pulumi.String("daily"),
-//				MaxBudgetCents: pulumi.Int(5000),
-//				RpmLimit:       pulumi.Int(60),
-//				TpmLimit:       pulumi.Int(200000),
+//				Name: pulumi.String("checkout-service"),
 //				AllowedPools: pulumi.StringArray{
 //					pulumi.String("smart"),
 //				},
@@ -63,13 +58,15 @@ import (
 type VirtualKey struct {
 	pulumi.CustomResourceState
 
-	// Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+	// Pools this key may target. Unset means all pools; an empty list means no pools. Immutable; changing it replaces the key (the mint spec is fixed at creation).
 	AllowedPools pulumi.StringArrayOutput `pulumi:"allowedPools"`
 	// AWS-style access key id, when `issueAwsCredential` is true. Returned only at creation.
 	AwsAccessKeyId pulumi.StringPtrOutput `pulumi:"awsAccessKeyId"`
 	// AWS-style secret access key, when `issueAwsCredential` is true. Returned only at creation; stored in state and never re-read.
 	AwsSecretAccessKey pulumi.StringPtrOutput `pulumi:"awsSecretAccessKey"`
-	// Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+	// Unsupported since busbar 1.5; configure budget windows on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	BudgetPeriod pulumi.StringOutput `pulumi:"budgetPeriod"`
 	// Epoch seconds the key was minted.
 	CreatedAt pulumi.IntOutput `pulumi:"createdAt"`
@@ -77,15 +74,21 @@ type VirtualKey struct {
 	Enabled pulumi.BoolOutput `pulumi:"enabled"`
 	// When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
 	IssueAwsCredential pulumi.BoolPtrOutput `pulumi:"issueAwsCredential"`
-	// Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+	// Unsupported since busbar 1.5; configure spend limits on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	MaxBudgetCents pulumi.IntPtrOutput `pulumi:"maxBudgetCents"`
 	// Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
 	Name pulumi.StringOutput `pulumi:"name"`
-	// Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+	// Unsupported since busbar 1.5; configure rate limits on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	RpmLimit pulumi.IntPtrOutput `pulumi:"rpmLimit"`
-	// The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
+	// The signed bearer token. Returned only at creation; stored in state and never re-read.
 	Secret pulumi.StringPtrOutput `pulumi:"secret"`
-	// Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+	// Unsupported since busbar 1.5; configure rate limits on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	TpmLimit pulumi.IntPtrOutput `pulumi:"tpmLimit"`
 }
 
@@ -124,13 +127,15 @@ func GetVirtualKey(ctx *pulumi.Context,
 
 // Input properties used for looking up and filtering VirtualKey resources.
 type virtualKeyState struct {
-	// Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+	// Pools this key may target. Unset means all pools; an empty list means no pools. Immutable; changing it replaces the key (the mint spec is fixed at creation).
 	AllowedPools []string `pulumi:"allowedPools"`
 	// AWS-style access key id, when `issueAwsCredential` is true. Returned only at creation.
 	AwsAccessKeyId *string `pulumi:"awsAccessKeyId"`
 	// AWS-style secret access key, when `issueAwsCredential` is true. Returned only at creation; stored in state and never re-read.
 	AwsSecretAccessKey *string `pulumi:"awsSecretAccessKey"`
-	// Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+	// Unsupported since busbar 1.5; configure budget windows on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	BudgetPeriod *string `pulumi:"budgetPeriod"`
 	// Epoch seconds the key was minted.
 	CreatedAt *int `pulumi:"createdAt"`
@@ -138,26 +143,34 @@ type virtualKeyState struct {
 	Enabled *bool `pulumi:"enabled"`
 	// When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
 	IssueAwsCredential *bool `pulumi:"issueAwsCredential"`
-	// Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+	// Unsupported since busbar 1.5; configure spend limits on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	MaxBudgetCents *int `pulumi:"maxBudgetCents"`
 	// Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
 	Name *string `pulumi:"name"`
-	// Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+	// Unsupported since busbar 1.5; configure rate limits on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	RpmLimit *int `pulumi:"rpmLimit"`
-	// The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
+	// The signed bearer token. Returned only at creation; stored in state and never re-read.
 	Secret *string `pulumi:"secret"`
-	// Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+	// Unsupported since busbar 1.5; configure rate limits on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	TpmLimit *int `pulumi:"tpmLimit"`
 }
 
 type VirtualKeyState struct {
-	// Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+	// Pools this key may target. Unset means all pools; an empty list means no pools. Immutable; changing it replaces the key (the mint spec is fixed at creation).
 	AllowedPools pulumi.StringArrayInput
 	// AWS-style access key id, when `issueAwsCredential` is true. Returned only at creation.
 	AwsAccessKeyId pulumi.StringPtrInput
 	// AWS-style secret access key, when `issueAwsCredential` is true. Returned only at creation; stored in state and never re-read.
 	AwsSecretAccessKey pulumi.StringPtrInput
-	// Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+	// Unsupported since busbar 1.5; configure budget windows on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	BudgetPeriod pulumi.StringPtrInput
 	// Epoch seconds the key was minted.
 	CreatedAt pulumi.IntPtrInput
@@ -165,15 +178,21 @@ type VirtualKeyState struct {
 	Enabled pulumi.BoolPtrInput
 	// When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
 	IssueAwsCredential pulumi.BoolPtrInput
-	// Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+	// Unsupported since busbar 1.5; configure spend limits on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	MaxBudgetCents pulumi.IntPtrInput
 	// Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
 	Name pulumi.StringPtrInput
-	// Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+	// Unsupported since busbar 1.5; configure rate limits on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	RpmLimit pulumi.IntPtrInput
-	// The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
+	// The signed bearer token. Returned only at creation; stored in state and never re-read.
 	Secret pulumi.StringPtrInput
-	// Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+	// Unsupported since busbar 1.5; configure rate limits on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	TpmLimit pulumi.IntPtrInput
 }
 
@@ -182,37 +201,53 @@ func (VirtualKeyState) ElementType() reflect.Type {
 }
 
 type virtualKeyArgs struct {
-	// Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+	// Pools this key may target. Unset means all pools; an empty list means no pools. Immutable; changing it replaces the key (the mint spec is fixed at creation).
 	AllowedPools []string `pulumi:"allowedPools"`
-	// Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+	// Unsupported since busbar 1.5; configure budget windows on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	BudgetPeriod *string `pulumi:"budgetPeriod"`
 	// When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
 	IssueAwsCredential *bool `pulumi:"issueAwsCredential"`
-	// Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+	// Unsupported since busbar 1.5; configure spend limits on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	MaxBudgetCents *int `pulumi:"maxBudgetCents"`
 	// Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
 	Name *string `pulumi:"name"`
-	// Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+	// Unsupported since busbar 1.5; configure rate limits on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	RpmLimit *int `pulumi:"rpmLimit"`
-	// Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+	// Unsupported since busbar 1.5; configure rate limits on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	TpmLimit *int `pulumi:"tpmLimit"`
 }
 
 // The set of arguments for constructing a VirtualKey resource.
 type VirtualKeyArgs struct {
-	// Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+	// Pools this key may target. Unset means all pools; an empty list means no pools. Immutable; changing it replaces the key (the mint spec is fixed at creation).
 	AllowedPools pulumi.StringArrayInput
-	// Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+	// Unsupported since busbar 1.5; configure budget windows on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	BudgetPeriod pulumi.StringPtrInput
 	// When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
 	IssueAwsCredential pulumi.BoolPtrInput
-	// Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+	// Unsupported since busbar 1.5; configure spend limits on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	MaxBudgetCents pulumi.IntPtrInput
 	// Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
 	Name pulumi.StringPtrInput
-	// Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+	// Unsupported since busbar 1.5; configure rate limits on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	RpmLimit pulumi.IntPtrInput
-	// Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+	// Unsupported since busbar 1.5; configure rate limits on gateway groups.
+	//
+	// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 	TpmLimit pulumi.IntPtrInput
 }
 
@@ -303,7 +338,7 @@ func (o VirtualKeyOutput) ToVirtualKeyOutputWithContext(ctx context.Context) Vir
 	return o
 }
 
-// Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+// Pools this key may target. Unset means all pools; an empty list means no pools. Immutable; changing it replaces the key (the mint spec is fixed at creation).
 func (o VirtualKeyOutput) AllowedPools() pulumi.StringArrayOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.StringArrayOutput { return v.AllowedPools }).(pulumi.StringArrayOutput)
 }
@@ -318,7 +353,9 @@ func (o VirtualKeyOutput) AwsSecretAccessKey() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.StringPtrOutput { return v.AwsSecretAccessKey }).(pulumi.StringPtrOutput)
 }
 
-// Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+// Unsupported since busbar 1.5; configure budget windows on gateway groups.
+//
+// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 func (o VirtualKeyOutput) BudgetPeriod() pulumi.StringOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.StringOutput { return v.BudgetPeriod }).(pulumi.StringOutput)
 }
@@ -338,7 +375,9 @@ func (o VirtualKeyOutput) IssueAwsCredential() pulumi.BoolPtrOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.BoolPtrOutput { return v.IssueAwsCredential }).(pulumi.BoolPtrOutput)
 }
 
-// Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+// Unsupported since busbar 1.5; configure spend limits on gateway groups.
+//
+// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 func (o VirtualKeyOutput) MaxBudgetCents() pulumi.IntPtrOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.IntPtrOutput { return v.MaxBudgetCents }).(pulumi.IntPtrOutput)
 }
@@ -348,17 +387,21 @@ func (o VirtualKeyOutput) Name() pulumi.StringOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.StringOutput { return v.Name }).(pulumi.StringOutput)
 }
 
-// Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+// Unsupported since busbar 1.5; configure rate limits on gateway groups.
+//
+// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 func (o VirtualKeyOutput) RpmLimit() pulumi.IntPtrOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.IntPtrOutput { return v.RpmLimit }).(pulumi.IntPtrOutput)
 }
 
-// The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
+// The signed bearer token. Returned only at creation; stored in state and never re-read.
 func (o VirtualKeyOutput) Secret() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.StringPtrOutput { return v.Secret }).(pulumi.StringPtrOutput)
 }
 
-// Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+// Unsupported since busbar 1.5; configure rate limits on gateway groups.
+//
+// Deprecated: Removed by busbar 1.5; configure limits on gateway groups.
 func (o VirtualKeyOutput) TpmLimit() pulumi.IntPtrOutput {
 	return o.ApplyT(func(v *VirtualKey) pulumi.IntPtrOutput { return v.TpmLimit }).(pulumi.IntPtrOutput)
 }

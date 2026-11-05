@@ -11,6 +11,7 @@ replace github.com/GetBusbar/terraform-provider-busbar/shim => ./shim
 require (
 	github.com/GetBusbar/terraform-provider-busbar/shim v0.0.0-00010101000000-000000000000
 	github.com/pulumi/pulumi-terraform-bridge/v3 v3.134.0
+	github.com/pulumi/pulumi/sdk/v3 v3.251.0
 )
 
 require (
@@ -23,7 +24,7 @@ require (
 	cloud.google.com/go/monitoring v1.24.3 // indirect
 	cloud.google.com/go/storage v1.61.3 // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
-	github.com/GetBusbar/terraform-provider-busbar v0.1.0 // indirect
+	github.com/GetBusbar/terraform-provider-busbar v0.1.2-0.20261105184446-a58bfdbfa588 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.32.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.55.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.55.0 // indirect
@@ -150,7 +151,7 @@ require (
 	github.com/muesli/cancelreader v0.2.2 // indirect
 	github.com/muesli/termenv v0.16.0 // indirect
 	github.com/natefinch/atomic v1.0.1 // indirect
-	github.com/oapi-codegen/runtime v1.6.0 // indirect
+	github.com/oapi-codegen/runtime v1.7.0 // indirect
 	github.com/oklog/run v1.2.0 // indirect
 	github.com/olekukonko/cat v0.0.0-20250911104152-50322a0618f6 // indirect
 	github.com/olekukonko/errors v1.1.0 // indirect
@@ -175,7 +176,6 @@ require (
 	github.com/pulumi/pulumi-java v1.32.0 // indirect
 	github.com/pulumi/pulumi-yaml v1.37.1-0.20260709082604-efc7b02d80e5 // indirect
 	github.com/pulumi/pulumi/pkg/v3 v3.251.0 // indirect
-	github.com/pulumi/pulumi/sdk/v3 v3.251.0 // indirect
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect

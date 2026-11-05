@@ -29,26 +29,38 @@ class VirtualKeyArgs:
         """
         The set of arguments for constructing a VirtualKey resource.
 
-        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
-        :param pulumi.Input[_builtins.str] budget_period: Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Unset means all pools; an empty list means no pools. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+        :param pulumi.Input[_builtins.str] budget_period: Unsupported since busbar 1.5; configure budget windows on gateway groups.
         :param pulumi.Input[_builtins.bool] issue_aws_credential: When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
-        :param pulumi.Input[_builtins.int] max_budget_cents: Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+        :param pulumi.Input[_builtins.int] max_budget_cents: Unsupported since busbar 1.5; configure spend limits on gateway groups.
         :param pulumi.Input[_builtins.str] name: Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
-        :param pulumi.Input[_builtins.int] rpm_limit: Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-        :param pulumi.Input[_builtins.int] tpm_limit: Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        :param pulumi.Input[_builtins.int] rpm_limit: Unsupported since busbar 1.5; configure rate limits on gateway groups.
+        :param pulumi.Input[_builtins.int] tpm_limit: Unsupported since busbar 1.5; configure rate limits on gateway groups.
         """
         if allowed_pools is not None:
             pulumi.set(__self__, "allowed_pools", allowed_pools)
+        if budget_period is not None:
+            warnings.warn("""Removed by busbar 1.5; configure limits on gateway groups.""", DeprecationWarning)
+            pulumi.log.warn("""budget_period is deprecated: Removed by busbar 1.5; configure limits on gateway groups.""")
         if budget_period is not None:
             pulumi.set(__self__, "budget_period", budget_period)
         if issue_aws_credential is not None:
             pulumi.set(__self__, "issue_aws_credential", issue_aws_credential)
         if max_budget_cents is not None:
+            warnings.warn("""Removed by busbar 1.5; configure limits on gateway groups.""", DeprecationWarning)
+            pulumi.log.warn("""max_budget_cents is deprecated: Removed by busbar 1.5; configure limits on gateway groups.""")
+        if max_budget_cents is not None:
             pulumi.set(__self__, "max_budget_cents", max_budget_cents)
         if name is not None:
             pulumi.set(__self__, "name", name)
         if rpm_limit is not None:
+            warnings.warn("""Removed by busbar 1.5; configure limits on gateway groups.""", DeprecationWarning)
+            pulumi.log.warn("""rpm_limit is deprecated: Removed by busbar 1.5; configure limits on gateway groups.""")
+        if rpm_limit is not None:
             pulumi.set(__self__, "rpm_limit", rpm_limit)
+        if tpm_limit is not None:
+            warnings.warn("""Removed by busbar 1.5; configure limits on gateway groups.""", DeprecationWarning)
+            pulumi.log.warn("""tpm_limit is deprecated: Removed by busbar 1.5; configure limits on gateway groups.""")
         if tpm_limit is not None:
             pulumi.set(__self__, "tpm_limit", tpm_limit)
 
@@ -56,7 +68,7 @@ class VirtualKeyArgs:
     @pulumi.getter(name="allowedPools")
     def allowed_pools(self) -> pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]]:
         """
-        Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+        Pools this key may target. Unset means all pools; an empty list means no pools. Immutable; changing it replaces the key (the mint spec is fixed at creation).
         """
         return pulumi.get(self, "allowed_pools")
 
@@ -66,9 +78,10 @@ class VirtualKeyArgs:
 
     @_builtins.property
     @pulumi.getter(name="budgetPeriod")
+    @_utilities.deprecated("""Removed by busbar 1.5; configure limits on gateway groups.""")
     def budget_period(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
-        Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+        Unsupported since busbar 1.5; configure budget windows on gateway groups.
         """
         return pulumi.get(self, "budget_period")
 
@@ -90,9 +103,10 @@ class VirtualKeyArgs:
 
     @_builtins.property
     @pulumi.getter(name="maxBudgetCents")
+    @_utilities.deprecated("""Removed by busbar 1.5; configure limits on gateway groups.""")
     def max_budget_cents(self) -> pulumi.Input[Optional[_builtins.int]]:
         """
-        Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+        Unsupported since busbar 1.5; configure spend limits on gateway groups.
         """
         return pulumi.get(self, "max_budget_cents")
 
@@ -114,9 +128,10 @@ class VirtualKeyArgs:
 
     @_builtins.property
     @pulumi.getter(name="rpmLimit")
+    @_utilities.deprecated("""Removed by busbar 1.5; configure limits on gateway groups.""")
     def rpm_limit(self) -> pulumi.Input[Optional[_builtins.int]]:
         """
-        Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        Unsupported since busbar 1.5; configure rate limits on gateway groups.
         """
         return pulumi.get(self, "rpm_limit")
 
@@ -126,9 +141,10 @@ class VirtualKeyArgs:
 
     @_builtins.property
     @pulumi.getter(name="tpmLimit")
+    @_utilities.deprecated("""Removed by busbar 1.5; configure limits on gateway groups.""")
     def tpm_limit(self) -> pulumi.Input[Optional[_builtins.int]]:
         """
-        Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        Unsupported since busbar 1.5; configure rate limits on gateway groups.
         """
         return pulumi.get(self, "tpm_limit")
 
@@ -155,18 +171,18 @@ class _VirtualKeyState:
         """
         Input properties used for looking up and filtering VirtualKey resources.
 
-        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Unset means all pools; an empty list means no pools. Immutable; changing it replaces the key (the mint spec is fixed at creation).
         :param pulumi.Input[_builtins.str] aws_access_key_id: AWS-style access key id, when `issue_aws_credential` is true. Returned only at creation.
         :param pulumi.Input[_builtins.str] aws_secret_access_key: AWS-style secret access key, when `issue_aws_credential` is true. Returned only at creation; stored in state and never re-read.
-        :param pulumi.Input[_builtins.str] budget_period: Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+        :param pulumi.Input[_builtins.str] budget_period: Unsupported since busbar 1.5; configure budget windows on gateway groups.
         :param pulumi.Input[_builtins.int] created_at: Epoch seconds the key was minted.
         :param pulumi.Input[_builtins.bool] enabled: Whether the key currently resolves. A key is created enabled; disable it out-of-band via the admin API.
         :param pulumi.Input[_builtins.bool] issue_aws_credential: When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
-        :param pulumi.Input[_builtins.int] max_budget_cents: Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+        :param pulumi.Input[_builtins.int] max_budget_cents: Unsupported since busbar 1.5; configure spend limits on gateway groups.
         :param pulumi.Input[_builtins.str] name: Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
-        :param pulumi.Input[_builtins.int] rpm_limit: Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-        :param pulumi.Input[_builtins.str] secret: The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
-        :param pulumi.Input[_builtins.int] tpm_limit: Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        :param pulumi.Input[_builtins.int] rpm_limit: Unsupported since busbar 1.5; configure rate limits on gateway groups.
+        :param pulumi.Input[_builtins.str] secret: The signed bearer token. Returned only at creation; stored in state and never re-read.
+        :param pulumi.Input[_builtins.int] tpm_limit: Unsupported since busbar 1.5; configure rate limits on gateway groups.
         """
         if allowed_pools is not None:
             pulumi.set(__self__, "allowed_pools", allowed_pools)
@@ -174,6 +190,9 @@ class _VirtualKeyState:
             pulumi.set(__self__, "aws_access_key_id", aws_access_key_id)
         if aws_secret_access_key is not None:
             pulumi.set(__self__, "aws_secret_access_key", aws_secret_access_key)
+        if budget_period is not None:
+            warnings.warn("""Removed by busbar 1.5; configure limits on gateway groups.""", DeprecationWarning)
+            pulumi.log.warn("""budget_period is deprecated: Removed by busbar 1.5; configure limits on gateway groups.""")
         if budget_period is not None:
             pulumi.set(__self__, "budget_period", budget_period)
         if created_at is not None:
@@ -183,13 +202,22 @@ class _VirtualKeyState:
         if issue_aws_credential is not None:
             pulumi.set(__self__, "issue_aws_credential", issue_aws_credential)
         if max_budget_cents is not None:
+            warnings.warn("""Removed by busbar 1.5; configure limits on gateway groups.""", DeprecationWarning)
+            pulumi.log.warn("""max_budget_cents is deprecated: Removed by busbar 1.5; configure limits on gateway groups.""")
+        if max_budget_cents is not None:
             pulumi.set(__self__, "max_budget_cents", max_budget_cents)
         if name is not None:
             pulumi.set(__self__, "name", name)
         if rpm_limit is not None:
+            warnings.warn("""Removed by busbar 1.5; configure limits on gateway groups.""", DeprecationWarning)
+            pulumi.log.warn("""rpm_limit is deprecated: Removed by busbar 1.5; configure limits on gateway groups.""")
+        if rpm_limit is not None:
             pulumi.set(__self__, "rpm_limit", rpm_limit)
         if secret is not None:
             pulumi.set(__self__, "secret", secret)
+        if tpm_limit is not None:
+            warnings.warn("""Removed by busbar 1.5; configure limits on gateway groups.""", DeprecationWarning)
+            pulumi.log.warn("""tpm_limit is deprecated: Removed by busbar 1.5; configure limits on gateway groups.""")
         if tpm_limit is not None:
             pulumi.set(__self__, "tpm_limit", tpm_limit)
 
@@ -197,7 +225,7 @@ class _VirtualKeyState:
     @pulumi.getter(name="allowedPools")
     def allowed_pools(self) -> pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]]:
         """
-        Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+        Pools this key may target. Unset means all pools; an empty list means no pools. Immutable; changing it replaces the key (the mint spec is fixed at creation).
         """
         return pulumi.get(self, "allowed_pools")
 
@@ -231,9 +259,10 @@ class _VirtualKeyState:
 
     @_builtins.property
     @pulumi.getter(name="budgetPeriod")
+    @_utilities.deprecated("""Removed by busbar 1.5; configure limits on gateway groups.""")
     def budget_period(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
-        Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+        Unsupported since busbar 1.5; configure budget windows on gateway groups.
         """
         return pulumi.get(self, "budget_period")
 
@@ -279,9 +308,10 @@ class _VirtualKeyState:
 
     @_builtins.property
     @pulumi.getter(name="maxBudgetCents")
+    @_utilities.deprecated("""Removed by busbar 1.5; configure limits on gateway groups.""")
     def max_budget_cents(self) -> pulumi.Input[Optional[_builtins.int]]:
         """
-        Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+        Unsupported since busbar 1.5; configure spend limits on gateway groups.
         """
         return pulumi.get(self, "max_budget_cents")
 
@@ -303,9 +333,10 @@ class _VirtualKeyState:
 
     @_builtins.property
     @pulumi.getter(name="rpmLimit")
+    @_utilities.deprecated("""Removed by busbar 1.5; configure limits on gateway groups.""")
     def rpm_limit(self) -> pulumi.Input[Optional[_builtins.int]]:
         """
-        Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        Unsupported since busbar 1.5; configure rate limits on gateway groups.
         """
         return pulumi.get(self, "rpm_limit")
 
@@ -317,7 +348,7 @@ class _VirtualKeyState:
     @pulumi.getter
     def secret(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
-        The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
+        The signed bearer token. Returned only at creation; stored in state and never re-read.
         """
         return pulumi.get(self, "secret")
 
@@ -327,9 +358,10 @@ class _VirtualKeyState:
 
     @_builtins.property
     @pulumi.getter(name="tpmLimit")
+    @_utilities.deprecated("""Removed by busbar 1.5; configure limits on gateway groups.""")
     def tpm_limit(self) -> pulumi.Input[Optional[_builtins.int]]:
         """
-        Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        Unsupported since busbar 1.5; configure rate limits on gateway groups.
         """
         return pulumi.get(self, "tpm_limit")
 
@@ -353,7 +385,7 @@ class VirtualKey(pulumi.CustomResource):
                  tpm_limit: pulumi.Input[Optional[_builtins.int]] = None,
                  __props__=None):
         """
-        A governance virtual key: a mintable, revocable credential with budget and rate caps scoped to a set of pools (POST/GET/PATCH/DELETE /api/v1/admin/keys). The plaintext secret is returned by busbar only once, at creation, and is stored in state as a sensitive value; refreshes update metadata (budget/limits/enabled) but never the secret. Requires `governance:` to be enabled on the gateway.
+        A signed, expiring busbar virtual key scoped to pools. The bearer token is returned once at creation and stored as a sensitive value. Budget and rate limits belong to gateway groups in busbar 1.5 and later; legacy key limit attributes are rejected.
 
         ## Example Usage
 
@@ -361,15 +393,10 @@ class VirtualKey(pulumi.CustomResource):
         import pulumi
         import pulumi_busbar as busbar
 
-        # Mint a governance virtual key with a daily budget and a request-rate cap,
-        # scoped to the "smart" pool. The plaintext secret is returned only once, at
-        # creation, and stored in state as a sensitive value.
+        # Mint a signed key scoped to the smart pool. Budget and rate limits live on
+        # gateway groups in busbar 1.5 and later, never on individual keys.
         app = busbar.VirtualKey("app",
             name="checkout-service",
-            budget_period="daily",
-            max_budget_cents=5000,
-            rpm_limit=60,
-            tpm_limit=200000,
             allowed_pools=["smart"])
         pulumi.export("appKeySecret", app.secret)
         ```
@@ -388,13 +415,13 @@ class VirtualKey(pulumi.CustomResource):
 
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
-        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
-        :param pulumi.Input[_builtins.str] budget_period: Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Unset means all pools; an empty list means no pools. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+        :param pulumi.Input[_builtins.str] budget_period: Unsupported since busbar 1.5; configure budget windows on gateway groups.
         :param pulumi.Input[_builtins.bool] issue_aws_credential: When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
-        :param pulumi.Input[_builtins.int] max_budget_cents: Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+        :param pulumi.Input[_builtins.int] max_budget_cents: Unsupported since busbar 1.5; configure spend limits on gateway groups.
         :param pulumi.Input[_builtins.str] name: Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
-        :param pulumi.Input[_builtins.int] rpm_limit: Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-        :param pulumi.Input[_builtins.int] tpm_limit: Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        :param pulumi.Input[_builtins.int] rpm_limit: Unsupported since busbar 1.5; configure rate limits on gateway groups.
+        :param pulumi.Input[_builtins.int] tpm_limit: Unsupported since busbar 1.5; configure rate limits on gateway groups.
         """
         ...
     @overload
@@ -403,7 +430,7 @@ class VirtualKey(pulumi.CustomResource):
                  args: Optional[VirtualKeyArgs] = None,
                  opts: Optional[pulumi.ResourceOptions] = None):
         """
-        A governance virtual key: a mintable, revocable credential with budget and rate caps scoped to a set of pools (POST/GET/PATCH/DELETE /api/v1/admin/keys). The plaintext secret is returned by busbar only once, at creation, and is stored in state as a sensitive value; refreshes update metadata (budget/limits/enabled) but never the secret. Requires `governance:` to be enabled on the gateway.
+        A signed, expiring busbar virtual key scoped to pools. The bearer token is returned once at creation and stored as a sensitive value. Budget and rate limits belong to gateway groups in busbar 1.5 and later; legacy key limit attributes are rejected.
 
         ## Example Usage
 
@@ -411,15 +438,10 @@ class VirtualKey(pulumi.CustomResource):
         import pulumi
         import pulumi_busbar as busbar
 
-        # Mint a governance virtual key with a daily budget and a request-rate cap,
-        # scoped to the "smart" pool. The plaintext secret is returned only once, at
-        # creation, and stored in state as a sensitive value.
+        # Mint a signed key scoped to the smart pool. Budget and rate limits live on
+        # gateway groups in busbar 1.5 and later, never on individual keys.
         app = busbar.VirtualKey("app",
             name="checkout-service",
-            budget_period="daily",
-            max_budget_cents=5000,
-            rpm_limit=60,
-            tpm_limit=200000,
             allowed_pools=["smart"])
         pulumi.export("appKeySecret", app.secret)
         ```
@@ -510,18 +532,18 @@ class VirtualKey(pulumi.CustomResource):
         :param str resource_name: The unique name of the resulting resource.
         :param pulumi.Input[str] id: The unique provider ID of the resource to lookup.
         :param pulumi.ResourceOptions opts: Options for the resource.
-        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] allowed_pools: Pools this key may target. Unset means all pools; an empty list means no pools. Immutable; changing it replaces the key (the mint spec is fixed at creation).
         :param pulumi.Input[_builtins.str] aws_access_key_id: AWS-style access key id, when `issue_aws_credential` is true. Returned only at creation.
         :param pulumi.Input[_builtins.str] aws_secret_access_key: AWS-style secret access key, when `issue_aws_credential` is true. Returned only at creation; stored in state and never re-read.
-        :param pulumi.Input[_builtins.str] budget_period: Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+        :param pulumi.Input[_builtins.str] budget_period: Unsupported since busbar 1.5; configure budget windows on gateway groups.
         :param pulumi.Input[_builtins.int] created_at: Epoch seconds the key was minted.
         :param pulumi.Input[_builtins.bool] enabled: Whether the key currently resolves. A key is created enabled; disable it out-of-band via the admin API.
         :param pulumi.Input[_builtins.bool] issue_aws_credential: When true, also mint an AWS-style access-key-id + secret access key (SigV4/Bedrock inbound auth). Both are returned only at creation. Immutable.
-        :param pulumi.Input[_builtins.int] max_budget_cents: Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+        :param pulumi.Input[_builtins.int] max_budget_cents: Unsupported since busbar 1.5; configure spend limits on gateway groups.
         :param pulumi.Input[_builtins.str] name: Human-readable label (<= 256 chars). Immutable; changing it replaces the key.
-        :param pulumi.Input[_builtins.int] rpm_limit: Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
-        :param pulumi.Input[_builtins.str] secret: The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
-        :param pulumi.Input[_builtins.int] tpm_limit: Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        :param pulumi.Input[_builtins.int] rpm_limit: Unsupported since busbar 1.5; configure rate limits on gateway groups.
+        :param pulumi.Input[_builtins.str] secret: The signed bearer token. Returned only at creation; stored in state and never re-read.
+        :param pulumi.Input[_builtins.int] tpm_limit: Unsupported since busbar 1.5; configure rate limits on gateway groups.
         """
         opts = pulumi.ResourceOptions.merge(opts, pulumi.ResourceOptions(id=id))
 
@@ -545,7 +567,7 @@ class VirtualKey(pulumi.CustomResource):
     @pulumi.getter(name="allowedPools")
     def allowed_pools(self) -> pulumi.Output[Optional[Sequence[_builtins.str]]]:
         """
-        Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+        Pools this key may target. Unset means all pools; an empty list means no pools. Immutable; changing it replaces the key (the mint spec is fixed at creation).
         """
         return pulumi.get(self, "allowed_pools")
 
@@ -567,9 +589,10 @@ class VirtualKey(pulumi.CustomResource):
 
     @_builtins.property
     @pulumi.getter(name="budgetPeriod")
+    @_utilities.deprecated("""Removed by busbar 1.5; configure limits on gateway groups.""")
     def budget_period(self) -> pulumi.Output[_builtins.str]:
         """
-        Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+        Unsupported since busbar 1.5; configure budget windows on gateway groups.
         """
         return pulumi.get(self, "budget_period")
 
@@ -599,9 +622,10 @@ class VirtualKey(pulumi.CustomResource):
 
     @_builtins.property
     @pulumi.getter(name="maxBudgetCents")
+    @_utilities.deprecated("""Removed by busbar 1.5; configure limits on gateway groups.""")
     def max_budget_cents(self) -> pulumi.Output[Optional[_builtins.int]]:
         """
-        Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+        Unsupported since busbar 1.5; configure spend limits on gateway groups.
         """
         return pulumi.get(self, "max_budget_cents")
 
@@ -615,9 +639,10 @@ class VirtualKey(pulumi.CustomResource):
 
     @_builtins.property
     @pulumi.getter(name="rpmLimit")
+    @_utilities.deprecated("""Removed by busbar 1.5; configure limits on gateway groups.""")
     def rpm_limit(self) -> pulumi.Output[Optional[_builtins.int]]:
         """
-        Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        Unsupported since busbar 1.5; configure rate limits on gateway groups.
         """
         return pulumi.get(self, "rpm_limit")
 
@@ -625,15 +650,16 @@ class VirtualKey(pulumi.CustomResource):
     @pulumi.getter
     def secret(self) -> pulumi.Output[Optional[_builtins.str]]:
         """
-        The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
+        The signed bearer token. Returned only at creation; stored in state and never re-read.
         """
         return pulumi.get(self, "secret")
 
     @_builtins.property
     @pulumi.getter(name="tpmLimit")
+    @_utilities.deprecated("""Removed by busbar 1.5; configure limits on gateway groups.""")
     def tpm_limit(self) -> pulumi.Output[Optional[_builtins.int]]:
         """
-        Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+        Unsupported since busbar 1.5; configure rate limits on gateway groups.
         """
         return pulumi.get(self, "tpm_limit")
 

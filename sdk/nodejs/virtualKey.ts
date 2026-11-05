@@ -5,7 +5,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as utilities from "./utilities";
 
 /**
- * A governance virtual key: a mintable, revocable credential with budget and rate caps scoped to a set of pools (POST/GET/PATCH/DELETE /api/v1/admin/keys). The plaintext secret is returned by busbar only once, at creation, and is stored in state as a sensitive value; refreshes update metadata (budget/limits/enabled) but never the secret. Requires `governance:` to be enabled on the gateway.
+ * A signed, expiring busbar virtual key scoped to pools. The bearer token is returned once at creation and stored as a sensitive value. Budget and rate limits belong to gateway groups in busbar 1.5 and later; legacy key limit attributes are rejected.
  *
  * ## Example Usage
  *
@@ -13,15 +13,10 @@ import * as utilities from "./utilities";
  * import * as pulumi from "@pulumi/pulumi";
  * import * as busbar from "@getbusbar/pulumi-busbar";
  *
- * // Mint a governance virtual key with a daily budget and a request-rate cap,
- * // scoped to the "smart" pool. The plaintext secret is returned only once, at
- * // creation, and stored in state as a sensitive value.
+ * // Mint a signed key scoped to the smart pool. Budget and rate limits live on
+ * // gateway groups in busbar 1.5 and later, never on individual keys.
  * const app = new busbar.VirtualKey("app", {
  *     name: "checkout-service",
- *     budgetPeriod: "daily",
- *     maxBudgetCents: 5000,
- *     rpmLimit: 60,
- *     tpmLimit: 200000,
  *     allowedPools: ["smart"],
  * });
  * export const appKeySecret = app.secret;
@@ -67,7 +62,7 @@ export class VirtualKey extends pulumi.CustomResource {
     }
 
     /**
-     * Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+     * Pools this key may target. Unset means all pools; an empty list means no pools. Immutable; changing it replaces the key (the mint spec is fixed at creation).
      */
     declare public readonly allowedPools: pulumi.Output<string[] | undefined>;
     /**
@@ -79,7 +74,9 @@ export class VirtualKey extends pulumi.CustomResource {
      */
     declare public /*out*/ readonly awsSecretAccessKey: pulumi.Output<string | undefined>;
     /**
-     * Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+     * Unsupported since busbar 1.5; configure budget windows on gateway groups.
+     *
+     * @deprecated Removed by busbar 1.5; configure limits on gateway groups.
      */
     declare public readonly budgetPeriod: pulumi.Output<string>;
     /**
@@ -95,7 +92,9 @@ export class VirtualKey extends pulumi.CustomResource {
      */
     declare public readonly issueAwsCredential: pulumi.Output<boolean | undefined>;
     /**
-     * Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+     * Unsupported since busbar 1.5; configure spend limits on gateway groups.
+     *
+     * @deprecated Removed by busbar 1.5; configure limits on gateway groups.
      */
     declare public readonly maxBudgetCents: pulumi.Output<number | undefined>;
     /**
@@ -103,15 +102,19 @@ export class VirtualKey extends pulumi.CustomResource {
      */
     declare public readonly name: pulumi.Output<string>;
     /**
-     * Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+     * Unsupported since busbar 1.5; configure rate limits on gateway groups.
+     *
+     * @deprecated Removed by busbar 1.5; configure limits on gateway groups.
      */
     declare public readonly rpmLimit: pulumi.Output<number | undefined>;
     /**
-     * The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
+     * The signed bearer token. Returned only at creation; stored in state and never re-read.
      */
     declare public /*out*/ readonly secret: pulumi.Output<string | undefined>;
     /**
-     * Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+     * Unsupported since busbar 1.5; configure rate limits on gateway groups.
+     *
+     * @deprecated Removed by busbar 1.5; configure limits on gateway groups.
      */
     declare public readonly tpmLimit: pulumi.Output<number | undefined>;
 
@@ -167,7 +170,7 @@ export class VirtualKey extends pulumi.CustomResource {
  */
 export interface VirtualKeyState {
     /**
-     * Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+     * Pools this key may target. Unset means all pools; an empty list means no pools. Immutable; changing it replaces the key (the mint spec is fixed at creation).
      */
     allowedPools?: pulumi.Input<pulumi.Input<string>[] | undefined>;
     /**
@@ -179,7 +182,9 @@ export interface VirtualKeyState {
      */
     awsSecretAccessKey?: pulumi.Input<string | undefined>;
     /**
-     * Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+     * Unsupported since busbar 1.5; configure budget windows on gateway groups.
+     *
+     * @deprecated Removed by busbar 1.5; configure limits on gateway groups.
      */
     budgetPeriod?: pulumi.Input<string | undefined>;
     /**
@@ -195,7 +200,9 @@ export interface VirtualKeyState {
      */
     issueAwsCredential?: pulumi.Input<boolean | undefined>;
     /**
-     * Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+     * Unsupported since busbar 1.5; configure spend limits on gateway groups.
+     *
+     * @deprecated Removed by busbar 1.5; configure limits on gateway groups.
      */
     maxBudgetCents?: pulumi.Input<number | undefined>;
     /**
@@ -203,15 +210,19 @@ export interface VirtualKeyState {
      */
     name?: pulumi.Input<string | undefined>;
     /**
-     * Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+     * Unsupported since busbar 1.5; configure rate limits on gateway groups.
+     *
+     * @deprecated Removed by busbar 1.5; configure limits on gateway groups.
      */
     rpmLimit?: pulumi.Input<number | undefined>;
     /**
-     * The plaintext bearer secret (sk-bb-...). Returned only at creation; stored in state and never re-read.
+     * The signed bearer token. Returned only at creation; stored in state and never re-read.
      */
     secret?: pulumi.Input<string | undefined>;
     /**
-     * Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+     * Unsupported since busbar 1.5; configure rate limits on gateway groups.
+     *
+     * @deprecated Removed by busbar 1.5; configure limits on gateway groups.
      */
     tpmLimit?: pulumi.Input<number | undefined>;
 }
@@ -221,11 +232,13 @@ export interface VirtualKeyState {
  */
 export interface VirtualKeyArgs {
     /**
-     * Pools this key may target. Empty/unset means unrestricted. Immutable; changing it replaces the key (the mint spec is fixed at creation).
+     * Pools this key may target. Unset means all pools; an empty list means no pools. Immutable; changing it replaces the key (the mint spec is fixed at creation).
      */
     allowedPools?: pulumi.Input<pulumi.Input<string>[] | undefined>;
     /**
-     * Budget window: one of total, daily, monthly. Defaults to total. Immutable; changing it replaces the key.
+     * Unsupported since busbar 1.5; configure budget windows on gateway groups.
+     *
+     * @deprecated Removed by busbar 1.5; configure limits on gateway groups.
      */
     budgetPeriod?: pulumi.Input<string | undefined>;
     /**
@@ -233,7 +246,9 @@ export interface VirtualKeyArgs {
      */
     issueAwsCredential?: pulumi.Input<boolean | undefined>;
     /**
-     * Spend cap in cents over the budget window (>= 0). Omit for unlimited. Mutable via PATCH.
+     * Unsupported since busbar 1.5; configure spend limits on gateway groups.
+     *
+     * @deprecated Removed by busbar 1.5; configure limits on gateway groups.
      */
     maxBudgetCents?: pulumi.Input<number | undefined>;
     /**
@@ -241,11 +256,15 @@ export interface VirtualKeyArgs {
      */
     name?: pulumi.Input<string | undefined>;
     /**
-     * Requests-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+     * Unsupported since busbar 1.5; configure rate limits on gateway groups.
+     *
+     * @deprecated Removed by busbar 1.5; configure limits on gateway groups.
      */
     rpmLimit?: pulumi.Input<number | undefined>;
     /**
-     * Tokens-per-minute cap (>= 1). Omit for unlimited. Mutable via PATCH.
+     * Unsupported since busbar 1.5; configure rate limits on gateway groups.
+     *
+     * @deprecated Removed by busbar 1.5; configure limits on gateway groups.
      */
     tpmLimit?: pulumi.Input<number | undefined>;
 }

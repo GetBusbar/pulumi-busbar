@@ -5,7 +5,7 @@ import * as pulumi from "@pulumi/pulumi";
 import * as utilities from "./utilities";
 
 /**
- * A routing hook: an external tap or gate reached over a unix socket or webhook, wired into busbar's request/ranking pipeline (POST/GET/PUT/DELETE /api/v1/admin/hooks). Exactly one of socket or webhook must be set. The grant fields (kind, prompt, user) are immutable once registered — changing them replaces the hook.
+ * A routing hook backed by an installed signed plugin (POST/GET/PUT/DELETE /api/v1/admin/hooks). The grant fields kind, prompt, and user are immutable; changing them replaces the hook. Settings are sensitive and write-only on current gateways; import cannot recover them.
  *
  * ## Example Usage
  *
@@ -13,12 +13,11 @@ import * as utilities from "./utilities";
  * import * as pulumi from "@pulumi/pulumi";
  * import * as busbar from "@getbusbar/pulumi-busbar";
  *
- * // Register a blocking "gate" hook reached over a webhook: it may inspect
- * // (prompt = "ro") and rerank candidates before the request is dispatched.
+ * // The module must already be installed as a signed hook plugin on the gateway.
  * const ranker = new busbar.Hook("ranker", {
  *     name: "quality-ranker",
  *     kind: "gate",
- *     webhook: "https://ranker.internal.example/rank",
+ *     module: "my-installed-ranker",
  *     prompt: "ro",
  *     timeoutMs: 100,
  *     priority: 10,
@@ -26,14 +25,6 @@ import * as utilities from "./utilities";
  *     settings: JSON.stringify({
  *         min_score: 0.6,
  *     }),
- * });
- * // A fire-and-forget "tap" hook over a unix socket for async usage telemetry.
- * const usageTap = new busbar.Hook("usage_tap", {
- *     name: "usage-telemetry",
- *     kind: "tap",
- *     socket: "/run/busbar/usage.sock",
- *     at: "completion",
- *     global: true,
  * });
  * ```
  *
@@ -76,7 +67,7 @@ export class Hook extends pulumi.CustomResource {
     }
 
     /**
-     * Pipeline stage: request, route, attempt, or completion. Null lets busbar place it by kind.
+     * Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
      */
     declare public readonly at: pulumi.Output<string | undefined>;
     /**
@@ -84,13 +75,17 @@ export class Hook extends pulumi.CustomResource {
      */
     declare public readonly default: pulumi.Output<boolean | undefined>;
     /**
-     * Whether the hook applies globally (all pools). Defaults to false. May read back true if wired via global_hooks.
+     * Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
      */
     declare public readonly global: pulumi.Output<boolean>;
     /**
      * Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook.
      */
     declare public readonly kind: pulumi.Output<string>;
+    /**
+     * Signed hook plugin name or alias installed on the gateway.
+     */
+    declare public readonly module: pulumi.Output<string>;
     /**
      * Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
      */
@@ -116,7 +111,9 @@ export class Hook extends pulumi.CustomResource {
      */
     declare public readonly settings: pulumi.Output<string>;
     /**
-     * Unix socket path to the hook process. Exactly one of socket or webhook.
+     * Unsupported since busbar 1.5; use module and plugin settings.
+     *
+     * @deprecated Removed in busbar 1.5; use module and plugin settings.
      */
     declare public readonly socket: pulumi.Output<string | undefined>;
     /**
@@ -128,7 +125,9 @@ export class Hook extends pulumi.CustomResource {
      */
     declare public readonly user: pulumi.Output<string>;
     /**
-     * Webhook URL for the hook. Exactly one of socket or webhook.
+     * Unsupported since busbar 1.5; use module and plugin settings.
+     *
+     * @deprecated Removed in busbar 1.5; use module and plugin settings.
      */
     declare public readonly webhook: pulumi.Output<string | undefined>;
 
@@ -149,6 +148,7 @@ export class Hook extends pulumi.CustomResource {
             resourceInputs["default"] = state?.default;
             resourceInputs["global"] = state?.global;
             resourceInputs["kind"] = state?.kind;
+            resourceInputs["module"] = state?.module;
             resourceInputs["name"] = state?.name;
             resourceInputs["onEmpty"] = state?.onEmpty;
             resourceInputs["onError"] = state?.onError;
@@ -164,22 +164,28 @@ export class Hook extends pulumi.CustomResource {
             if (args?.kind === undefined && !opts.urn) {
                 throw new Error("Missing required property 'kind'");
             }
+            if (args?.module === undefined && !opts.urn) {
+                throw new Error("Missing required property 'module'");
+            }
             resourceInputs["at"] = args?.at;
             resourceInputs["default"] = args?.default;
             resourceInputs["global"] = args?.global;
             resourceInputs["kind"] = args?.kind;
+            resourceInputs["module"] = args?.module;
             resourceInputs["name"] = args?.name;
             resourceInputs["onEmpty"] = args?.onEmpty;
             resourceInputs["onError"] = args?.onError;
             resourceInputs["priority"] = args?.priority;
             resourceInputs["prompt"] = args?.prompt;
-            resourceInputs["settings"] = args?.settings;
+            resourceInputs["settings"] = args?.settings ? pulumi.secret(args.settings) : undefined;
             resourceInputs["socket"] = args?.socket;
             resourceInputs["timeoutMs"] = args?.timeoutMs;
             resourceInputs["user"] = args?.user;
             resourceInputs["webhook"] = args?.webhook;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
+        const secretOpts = { additionalSecretOutputs: ["settings"] };
+        opts = pulumi.mergeOptions(opts, secretOpts);
         super(Hook.__pulumiType, name, resourceInputs, opts);
     }
 }
@@ -189,7 +195,7 @@ export class Hook extends pulumi.CustomResource {
  */
 export interface HookState {
     /**
-     * Pipeline stage: request, route, attempt, or completion. Null lets busbar place it by kind.
+     * Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
      */
     at?: pulumi.Input<string | undefined>;
     /**
@@ -197,13 +203,17 @@ export interface HookState {
      */
     default?: pulumi.Input<boolean | undefined>;
     /**
-     * Whether the hook applies globally (all pools). Defaults to false. May read back true if wired via global_hooks.
+     * Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
      */
     global?: pulumi.Input<boolean | undefined>;
     /**
      * Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook.
      */
     kind?: pulumi.Input<string | undefined>;
+    /**
+     * Signed hook plugin name or alias installed on the gateway.
+     */
+    module?: pulumi.Input<string | undefined>;
     /**
      * Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
      */
@@ -229,7 +239,9 @@ export interface HookState {
      */
     settings?: pulumi.Input<string | undefined>;
     /**
-     * Unix socket path to the hook process. Exactly one of socket or webhook.
+     * Unsupported since busbar 1.5; use module and plugin settings.
+     *
+     * @deprecated Removed in busbar 1.5; use module and plugin settings.
      */
     socket?: pulumi.Input<string | undefined>;
     /**
@@ -241,7 +253,9 @@ export interface HookState {
      */
     user?: pulumi.Input<string | undefined>;
     /**
-     * Webhook URL for the hook. Exactly one of socket or webhook.
+     * Unsupported since busbar 1.5; use module and plugin settings.
+     *
+     * @deprecated Removed in busbar 1.5; use module and plugin settings.
      */
     webhook?: pulumi.Input<string | undefined>;
 }
@@ -251,7 +265,7 @@ export interface HookState {
  */
 export interface HookArgs {
     /**
-     * Pipeline stage: request, route, attempt, or completion. Null lets busbar place it by kind.
+     * Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
      */
     at?: pulumi.Input<string | undefined>;
     /**
@@ -259,13 +273,17 @@ export interface HookArgs {
      */
     default?: pulumi.Input<boolean | undefined>;
     /**
-     * Whether the hook applies globally (all pools). Defaults to false. May read back true if wired via global_hooks.
+     * Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
      */
     global?: pulumi.Input<boolean | undefined>;
     /**
      * Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook.
      */
     kind: pulumi.Input<string>;
+    /**
+     * Signed hook plugin name or alias installed on the gateway.
+     */
+    module: pulumi.Input<string>;
     /**
      * Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
      */
@@ -291,7 +309,9 @@ export interface HookArgs {
      */
     settings?: pulumi.Input<string | undefined>;
     /**
-     * Unix socket path to the hook process. Exactly one of socket or webhook.
+     * Unsupported since busbar 1.5; use module and plugin settings.
+     *
+     * @deprecated Removed in busbar 1.5; use module and plugin settings.
      */
     socket?: pulumi.Input<string | undefined>;
     /**
@@ -303,7 +323,9 @@ export interface HookArgs {
      */
     user?: pulumi.Input<string | undefined>;
     /**
-     * Webhook URL for the hook. Exactly one of socket or webhook.
+     * Unsupported since busbar 1.5; use module and plugin settings.
+     *
+     * @deprecated Removed in busbar 1.5; use module and plugin settings.
      */
     webhook?: pulumi.Input<string | undefined>;
 }

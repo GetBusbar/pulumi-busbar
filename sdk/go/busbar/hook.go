@@ -12,7 +12,7 @@ import (
 	"github.com/pulumi/pulumi/sdk/v3/go/pulumi"
 )
 
-// A routing hook: an external tap or gate reached over a unix socket or webhook, wired into busbar's request/ranking pipeline (POST/GET/PUT/DELETE /api/v1/admin/hooks). Exactly one of socket or webhook must be set. The grant fields (kind, prompt, user) are immutable once registered — changing them replaces the hook.
+// A routing hook backed by an installed signed plugin (POST/GET/PUT/DELETE /api/v1/admin/hooks). The grant fields kind, prompt, and user are immutable; changing them replaces the hook. Settings are sensitive and write-only on current gateways; import cannot recover them.
 //
 // ## Example Usage
 //
@@ -37,28 +37,16 @@ import (
 //				return err
 //			}
 //			json0 := string(tmpJSON0)
-//			// Register a blocking "gate" hook reached over a webhook: it may inspect
-//			// (prompt = "ro") and rerank candidates before the request is dispatched.
+//			// The module must already be installed as a signed hook plugin on the gateway.
 //			_, err = busbar.NewHook(ctx, "ranker", &busbar.HookArgs{
 //				Name:      pulumi.String("quality-ranker"),
 //				Kind:      pulumi.String("gate"),
-//				Webhook:   pulumi.String("https://ranker.internal.example/rank"),
+//				Module:    pulumi.String("my-installed-ranker"),
 //				Prompt:    pulumi.String("ro"),
 //				TimeoutMs: pulumi.Int(100),
 //				Priority:  pulumi.Int(10),
 //				OnError:   pulumi.String("weighted"),
 //				Settings:  pulumi.String(json0),
-//			})
-//			if err != nil {
-//				return err
-//			}
-//			// A fire-and-forget "tap" hook over a unix socket for async usage telemetry.
-//			_, err = busbar.NewHook(ctx, "usage_tap", &busbar.HookArgs{
-//				Name:   pulumi.String("usage-telemetry"),
-//				Kind:   pulumi.String("tap"),
-//				Socket: pulumi.String("/run/busbar/usage.sock"),
-//				At:     pulumi.String("completion"),
-//				Global: pulumi.Bool(true),
 //			})
 //			if err != nil {
 //				return err
@@ -81,14 +69,16 @@ import (
 type Hook struct {
 	pulumi.CustomResourceState
 
-	// Pipeline stage: request, route, attempt, or completion. Null lets busbar place it by kind.
+	// Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
 	At pulumi.StringPtrOutput `pulumi:"at"`
 	// Whether this hook is the default for its stage. Write-only (not echoed by reads).
 	Default pulumi.BoolPtrOutput `pulumi:"default"`
-	// Whether the hook applies globally (all pools). Defaults to false. May read back true if wired via global_hooks.
+	// Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
 	Global pulumi.BoolOutput `pulumi:"global"`
 	// Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook.
 	Kind pulumi.StringOutput `pulumi:"kind"`
+	// Signed hook plugin name or alias installed on the gateway.
+	Module pulumi.StringOutput `pulumi:"module"`
 	// Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
 	Name pulumi.StringOutput `pulumi:"name"`
 	// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
@@ -101,13 +91,17 @@ type Hook struct {
 	Prompt pulumi.StringOutput `pulumi:"prompt"`
 	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
 	Settings pulumi.StringOutput `pulumi:"settings"`
-	// Unix socket path to the hook process. Exactly one of socket or webhook.
+	// Unsupported since busbar 1.5; use module and plugin settings.
+	//
+	// Deprecated: Removed in busbar 1.5; use module and plugin settings.
 	Socket pulumi.StringPtrOutput `pulumi:"socket"`
 	// Per-call timeout in milliseconds. Defaults to 1.
 	TimeoutMs pulumi.IntOutput `pulumi:"timeoutMs"`
 	// Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
 	User pulumi.StringOutput `pulumi:"user"`
-	// Webhook URL for the hook. Exactly one of socket or webhook.
+	// Unsupported since busbar 1.5; use module and plugin settings.
+	//
+	// Deprecated: Removed in busbar 1.5; use module and plugin settings.
 	Webhook pulumi.StringPtrOutput `pulumi:"webhook"`
 }
 
@@ -121,6 +115,16 @@ func NewHook(ctx *pulumi.Context,
 	if args.Kind == nil {
 		return nil, errors.New("invalid value for required argument 'Kind'")
 	}
+	if args.Module == nil {
+		return nil, errors.New("invalid value for required argument 'Module'")
+	}
+	if args.Settings != nil {
+		args.Settings = pulumi.ToSecret(args.Settings).(pulumi.StringPtrInput)
+	}
+	secrets := pulumi.AdditionalSecretOutputs([]string{
+		"settings",
+	})
+	opts = append(opts, secrets)
 	opts = internal.PkgResourceDefaultOpts(opts)
 	var resource Hook
 	err := ctx.RegisterResource("busbar:index/hook:Hook", name, args, &resource, opts...)
@@ -144,14 +148,16 @@ func GetHook(ctx *pulumi.Context,
 
 // Input properties used for looking up and filtering Hook resources.
 type hookState struct {
-	// Pipeline stage: request, route, attempt, or completion. Null lets busbar place it by kind.
+	// Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
 	At *string `pulumi:"at"`
 	// Whether this hook is the default for its stage. Write-only (not echoed by reads).
 	Default *bool `pulumi:"default"`
-	// Whether the hook applies globally (all pools). Defaults to false. May read back true if wired via global_hooks.
+	// Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
 	Global *bool `pulumi:"global"`
 	// Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook.
 	Kind *string `pulumi:"kind"`
+	// Signed hook plugin name or alias installed on the gateway.
+	Module *string `pulumi:"module"`
 	// Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
 	Name *string `pulumi:"name"`
 	// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
@@ -164,25 +170,31 @@ type hookState struct {
 	Prompt *string `pulumi:"prompt"`
 	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
 	Settings *string `pulumi:"settings"`
-	// Unix socket path to the hook process. Exactly one of socket or webhook.
+	// Unsupported since busbar 1.5; use module and plugin settings.
+	//
+	// Deprecated: Removed in busbar 1.5; use module and plugin settings.
 	Socket *string `pulumi:"socket"`
 	// Per-call timeout in milliseconds. Defaults to 1.
 	TimeoutMs *int `pulumi:"timeoutMs"`
 	// Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
 	User *string `pulumi:"user"`
-	// Webhook URL for the hook. Exactly one of socket or webhook.
+	// Unsupported since busbar 1.5; use module and plugin settings.
+	//
+	// Deprecated: Removed in busbar 1.5; use module and plugin settings.
 	Webhook *string `pulumi:"webhook"`
 }
 
 type HookState struct {
-	// Pipeline stage: request, route, attempt, or completion. Null lets busbar place it by kind.
+	// Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
 	At pulumi.StringPtrInput
 	// Whether this hook is the default for its stage. Write-only (not echoed by reads).
 	Default pulumi.BoolPtrInput
-	// Whether the hook applies globally (all pools). Defaults to false. May read back true if wired via global_hooks.
+	// Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
 	Global pulumi.BoolPtrInput
 	// Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook.
 	Kind pulumi.StringPtrInput
+	// Signed hook plugin name or alias installed on the gateway.
+	Module pulumi.StringPtrInput
 	// Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
 	Name pulumi.StringPtrInput
 	// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
@@ -195,13 +207,17 @@ type HookState struct {
 	Prompt pulumi.StringPtrInput
 	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
 	Settings pulumi.StringPtrInput
-	// Unix socket path to the hook process. Exactly one of socket or webhook.
+	// Unsupported since busbar 1.5; use module and plugin settings.
+	//
+	// Deprecated: Removed in busbar 1.5; use module and plugin settings.
 	Socket pulumi.StringPtrInput
 	// Per-call timeout in milliseconds. Defaults to 1.
 	TimeoutMs pulumi.IntPtrInput
 	// Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
 	User pulumi.StringPtrInput
-	// Webhook URL for the hook. Exactly one of socket or webhook.
+	// Unsupported since busbar 1.5; use module and plugin settings.
+	//
+	// Deprecated: Removed in busbar 1.5; use module and plugin settings.
 	Webhook pulumi.StringPtrInput
 }
 
@@ -210,14 +226,16 @@ func (HookState) ElementType() reflect.Type {
 }
 
 type hookArgs struct {
-	// Pipeline stage: request, route, attempt, or completion. Null lets busbar place it by kind.
+	// Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
 	At *string `pulumi:"at"`
 	// Whether this hook is the default for its stage. Write-only (not echoed by reads).
 	Default *bool `pulumi:"default"`
-	// Whether the hook applies globally (all pools). Defaults to false. May read back true if wired via global_hooks.
+	// Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
 	Global *bool `pulumi:"global"`
 	// Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook.
 	Kind string `pulumi:"kind"`
+	// Signed hook plugin name or alias installed on the gateway.
+	Module string `pulumi:"module"`
 	// Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
 	Name *string `pulumi:"name"`
 	// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
@@ -230,26 +248,32 @@ type hookArgs struct {
 	Prompt *string `pulumi:"prompt"`
 	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
 	Settings *string `pulumi:"settings"`
-	// Unix socket path to the hook process. Exactly one of socket or webhook.
+	// Unsupported since busbar 1.5; use module and plugin settings.
+	//
+	// Deprecated: Removed in busbar 1.5; use module and plugin settings.
 	Socket *string `pulumi:"socket"`
 	// Per-call timeout in milliseconds. Defaults to 1.
 	TimeoutMs *int `pulumi:"timeoutMs"`
 	// Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
 	User *string `pulumi:"user"`
-	// Webhook URL for the hook. Exactly one of socket or webhook.
+	// Unsupported since busbar 1.5; use module and plugin settings.
+	//
+	// Deprecated: Removed in busbar 1.5; use module and plugin settings.
 	Webhook *string `pulumi:"webhook"`
 }
 
 // The set of arguments for constructing a Hook resource.
 type HookArgs struct {
-	// Pipeline stage: request, route, attempt, or completion. Null lets busbar place it by kind.
+	// Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
 	At pulumi.StringPtrInput
 	// Whether this hook is the default for its stage. Write-only (not echoed by reads).
 	Default pulumi.BoolPtrInput
-	// Whether the hook applies globally (all pools). Defaults to false. May read back true if wired via global_hooks.
+	// Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
 	Global pulumi.BoolPtrInput
 	// Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook.
 	Kind pulumi.StringInput
+	// Signed hook plugin name or alias installed on the gateway.
+	Module pulumi.StringInput
 	// Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
 	Name pulumi.StringPtrInput
 	// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
@@ -262,13 +286,17 @@ type HookArgs struct {
 	Prompt pulumi.StringPtrInput
 	// Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
 	Settings pulumi.StringPtrInput
-	// Unix socket path to the hook process. Exactly one of socket or webhook.
+	// Unsupported since busbar 1.5; use module and plugin settings.
+	//
+	// Deprecated: Removed in busbar 1.5; use module and plugin settings.
 	Socket pulumi.StringPtrInput
 	// Per-call timeout in milliseconds. Defaults to 1.
 	TimeoutMs pulumi.IntPtrInput
 	// Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
 	User pulumi.StringPtrInput
-	// Webhook URL for the hook. Exactly one of socket or webhook.
+	// Unsupported since busbar 1.5; use module and plugin settings.
+	//
+	// Deprecated: Removed in busbar 1.5; use module and plugin settings.
 	Webhook pulumi.StringPtrInput
 }
 
@@ -359,7 +387,7 @@ func (o HookOutput) ToHookOutputWithContext(ctx context.Context) HookOutput {
 	return o
 }
 
-// Pipeline stage: request, route, attempt, or completion. Null lets busbar place it by kind.
+// Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
 func (o HookOutput) At() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Hook) pulumi.StringPtrOutput { return v.At }).(pulumi.StringPtrOutput)
 }
@@ -369,7 +397,7 @@ func (o HookOutput) Default() pulumi.BoolPtrOutput {
 	return o.ApplyT(func(v *Hook) pulumi.BoolPtrOutput { return v.Default }).(pulumi.BoolPtrOutput)
 }
 
-// Whether the hook applies globally (all pools). Defaults to false. May read back true if wired via global_hooks.
+// Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
 func (o HookOutput) Global() pulumi.BoolOutput {
 	return o.ApplyT(func(v *Hook) pulumi.BoolOutput { return v.Global }).(pulumi.BoolOutput)
 }
@@ -377,6 +405,11 @@ func (o HookOutput) Global() pulumi.BoolOutput {
 // Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook.
 func (o HookOutput) Kind() pulumi.StringOutput {
 	return o.ApplyT(func(v *Hook) pulumi.StringOutput { return v.Kind }).(pulumi.StringOutput)
+}
+
+// Signed hook plugin name or alias installed on the gateway.
+func (o HookOutput) Module() pulumi.StringOutput {
+	return o.ApplyT(func(v *Hook) pulumi.StringOutput { return v.Module }).(pulumi.StringOutput)
 }
 
 // Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
@@ -409,7 +442,9 @@ func (o HookOutput) Settings() pulumi.StringOutput {
 	return o.ApplyT(func(v *Hook) pulumi.StringOutput { return v.Settings }).(pulumi.StringOutput)
 }
 
-// Unix socket path to the hook process. Exactly one of socket or webhook.
+// Unsupported since busbar 1.5; use module and plugin settings.
+//
+// Deprecated: Removed in busbar 1.5; use module and plugin settings.
 func (o HookOutput) Socket() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Hook) pulumi.StringPtrOutput { return v.Socket }).(pulumi.StringPtrOutput)
 }
@@ -424,7 +459,9 @@ func (o HookOutput) User() pulumi.StringOutput {
 	return o.ApplyT(func(v *Hook) pulumi.StringOutput { return v.User }).(pulumi.StringOutput)
 }
 
-// Webhook URL for the hook. Exactly one of socket or webhook.
+// Unsupported since busbar 1.5; use module and plugin settings.
+//
+// Deprecated: Removed in busbar 1.5; use module and plugin settings.
 func (o HookOutput) Webhook() pulumi.StringPtrOutput {
 	return o.ApplyT(func(v *Hook) pulumi.StringPtrOutput { return v.Webhook }).(pulumi.StringPtrOutput)
 }
