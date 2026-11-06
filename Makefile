@@ -3,25 +3,22 @@ ORG             := getbusbar
 PROJECT         := github.com/$(ORG)/pulumi-$(PACK)
 PROVIDER        := pulumi-resource-$(PACK)
 TFGEN           := pulumi-tfgen-$(PACK)
-NODE_MODULE_NAME:= @getbusbar/pulumi-$(PACK)
-PYPI_PACKAGE    := pulumi_$(PACK)
 
 VERSION         ?= 0.0.1
 
-WORKING_DIR     := $(shell pwd)
 PROVIDER_PATH   := provider
 SCHEMA_PATH     := $(PROVIDER_PATH)/cmd/$(PROVIDER)/schema.json
 SCHEMA_EMBED    := $(PROVIDER_PATH)/cmd/$(PROVIDER)/schema-embed.json
 
-GOPATH          := $(shell go env GOPATH)
-BIN             := $(GOPATH)/bin
+# Repository-local tools: an installed dev plugin on PATH would shadow released plugins.
+BIN             := $(CURDIR)/bin
 
 LDFLAGS         := -X $(PROJECT)/provider/pkg/version.Version=$(VERSION)
 
 .PHONY: default ensure tfgen provider build_sdks build_nodejs build_python build_go \
-        clean lint schema drift help check_pulumi
+        build clean lint schema drift help check_pulumi
 
-default: provider build_sdks
+default: build
 
 # ---------------------------------------------------------------------------
 # Build the tfgen and provider binaries.
@@ -46,15 +43,15 @@ provider:: schema ## Build the pulumi-resource-busbar plugin binary (embeds the 
 
 build_sdks:: build_nodejs build_python build_go ## Generate all language SDKs
 
-build_nodejs:: check_pulumi tfgen ## Generate the TypeScript/JavaScript SDK
+build_nodejs:: schema ## Generate the TypeScript/JavaScript SDK
 	$(BIN)/$(TFGEN) nodejs --out sdk/nodejs
 	python3 scripts/prepare_nodejs.py sdk/nodejs
 
-build_python:: check_pulumi tfgen ## Generate the Python SDK
+build_python:: schema ## Generate the Python SDK
 	$(BIN)/$(TFGEN) python --out sdk/python
 	python3 scripts/prepare_python.py sdk/python
 
-build_go:: check_pulumi tfgen ## Generate the Go SDK
+build_go:: schema ## Generate the Go SDK
 	$(BIN)/$(TFGEN) go --out sdk/go
 	python3 scripts/prepare_go.py sdk/go
 
@@ -70,14 +67,15 @@ ensure:: ## Download Go module dependencies
 lint:: ## Vet the provider module
 	cd $(PROVIDER_PATH) && go vet ./...
 
-drift:: build ## Regenerate everything and fail if the tree changed (CI drift check)
+drift:: build ## Regenerate everything and fail if the tree changed
 	git diff --exit-code
 	@drift_status="$$(git status --porcelain --untracked-files=normal)"; if [ -n "$$drift_status" ]; then printf '%s\n' "$$drift_status"; exit 1; fi
 
 build:: provider build_sdks ## Alias: build provider + all SDKs
 
-clean:: ## Remove generated schema artifacts
+clean:: ## Remove generated schema artifacts and local binaries
 	rm -f $(SCHEMA_PATH)
+	rm -rf $(BIN)
 
 help:: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+::?.*?## .*$$' $(MAKEFILE_LIST) | \

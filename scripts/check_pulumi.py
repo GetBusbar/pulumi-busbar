@@ -5,9 +5,14 @@ import subprocess
 import sys
 
 
+GO_MOD = Path(__file__).resolve().parents[1] / "provider/go.mod"
+
+
 def required_version():
-    module = (Path(__file__).resolve().parents[1] / "provider/go.mod").read_text()
-    return re.search(r"github\.com/pulumi/pulumi/pkg/v3\s+(v\S+)", module).group(1)
+    match = re.search(r"github\.com/pulumi/pulumi/pkg/v3\s+(v\S+)", GO_MOD.read_text())
+    if match is None:
+        raise ValueError(f"{GO_MOD} does not pin github.com/pulumi/pulumi/pkg/v3")
+    return match.group(1)
 
 
 def check_version():

@@ -9,9 +9,11 @@ class GeneratedDocumentationTests(unittest.TestCase):
     def test_examples_and_literal_identifiers_survive_generation(self):
         files = [ROOT / "provider/cmd/pulumi-resource-busbar/schema-embed.json"]
         for extension in ("*.go", "*.ts", "*.py"):
-            files.extend((ROOT / "sdk").rglob(extension))
+            # Generated sources only: skip installed packages and compiler output.
+            files.extend(path for path in (ROOT / "sdk").rglob(extension)
+                         if not {"node_modules", "bin"} & set(path.relative_to(ROOT).parts))
         for path in files:
-            text = path.read_text()
+            text = path.read_text(encoding="utf-8")
             for invalid in ("busbarAdminToken", "busbar_admin_token", "%!v(PANIC=", "BUSBAR*CONFIG*OVERLAY", "issue*aws*credential", "GetInfo(ctx, map[string]interface{}"):
                 self.assertNotIn(invalid, text, str(path))
         schema = json.loads(files[0].read_text())

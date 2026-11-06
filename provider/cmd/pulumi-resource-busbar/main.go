@@ -21,7 +21,6 @@ import (
 	tfbridge "github.com/pulumi/pulumi-terraform-bridge/v3/pkg/pf/tfbridge"
 
 	busbar "github.com/getbusbar/pulumi-busbar/provider"
-	"github.com/getbusbar/pulumi-busbar/provider/pkg/version"
 )
 
 //go:embed schema-embed.json
@@ -31,5 +30,3 @@ func main() {
 	meta := tfbridge.ProviderMetadata{PackageSchema: schema}
 	tfbridge.Main(context.Background(), "busbar", busbar.Provider(), meta)
 }
-
-var _ = version.Version

@@ -14,7 +14,7 @@
     "repository": "https://github.com/getbusbar/pulumi-busbar",
     "license": "Apache-2.0",
     "scripts": {
-        "build": "tsc && node -e \"require('fs').copyFileSync('package.json', 'bin/package.json')\"",
+        "build": "node -e \"require('fs').rmSync('bin', {recursive: true, force: true})\" && tsc && node -e \"require('fs').copyFileSync('package.json', 'bin/package.json')\"",
         "prepack": "npm run build",
         "test": "npm run build && node --test tests/virtualKey.test.js"
     },

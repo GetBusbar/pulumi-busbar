@@ -62,7 +62,8 @@ export class Provider extends pulumi.ProviderResource {
             resourceInputs["clientKeyPem"] = args?.clientKeyPem ? pulumi.secret(args.clientKeyPem) : undefined;
             resourceInputs["endpoint"] = (args?.endpoint) ?? utilities.getEnv("BUSBAR_ENDPOINT");
             resourceInputs["insecure"] = pulumi.output(args?.insecure).apply(JSON.stringify);
-            resourceInputs["token"] = (args?.token ? pulumi.secret(args.token) : undefined) ?? utilities.getEnv("BUSBAR_ADMIN_TOKEN");
+            const token = args?.token || utilities.getEnv("BUSBAR_ADMIN_TOKEN");
+            resourceInputs["token"] = token ? pulumi.secret(token) : undefined;
         }
         opts = pulumi.mergeOptions(utilities.resourceOptsDefaults(), opts);
         const secretOpts = { additionalSecretOutputs: ["clientKeyPem", "token"] };

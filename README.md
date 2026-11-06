@@ -1,7 +1,5 @@
 # Pulumi Busbar Provider
 
-[![codecov](https://codecov.io/gh/GetBusbar/pulumi-busbar/branch/dev/graph/badge.svg)](https://codecov.io/gh/GetBusbar/pulumi-busbar)
-
 A [Pulumi](https://www.pulumi.com) provider for [Busbar](https://getbusbar.com), the
 LLM gateway. It manages Busbar resources through the gateway's admin API and is a
 **bridge** of the upstream [`GetBusbar/terraform-provider-busbar`](https://github.com/GetBusbar/terraform-provider-busbar)
@@ -89,30 +87,50 @@ Generation requires Go 1.26, Python 3, and the Pulumi CLI version pinned by
 `github.com/pulumi/pulumi/pkg/v3` in `provider/go.mod`. Run
 `python3 scripts/check_pulumi.py --required-version` to print the required CLI
 version. The bridge delegates SDK generation to this external CLI; Make checks
-its version before writing generated files. Python post-processing preserves SDK
-secret accessors, configuration type stubs, and package layout after regeneration.
+its version before writing generated files. Post-processing (`scripts/prepare_*.py`)
+preserves SDK secret accessors, caller-owned constructor arguments, configuration
+type stubs, and package layout after regeneration, and fails if the generated code
+no longer matches what it rewrites.
 
 ```bash
-make provider      # build tfgen, generate schema.json, build the plugin binary
+make provider      # build tfgen, generate schema.json, build the plugin binary into ./bin
 make build_sdks    # generate the nodejs, python, and go SDKs
-make drift         # regenerate everything and fail if the tree is dirty (CI)
+make drift         # regenerate everything and fail if the tree is dirty
 ```
 
 ## Releases
 
-Pushing a stable `v0.x.y` or `v1.x.y` tag runs the release workflow. It generates
-SDKs with that version, builds npm and Python packages, and cross-compiles the
-provider for Linux, macOS, and Windows on amd64 and arm64. GitHub release assets
-use Pulumi's `pulumi-resource-busbar-vVERSION-OS-ARCH.tar.gz` naming, with a
-`SHA256SUMS` file. The Windows archive contains the `.exe` binary.
+No automation runs on tags in this repository. A release is cut from a checkout
+of the stable `v0.x.y` or `v1.x.y` root tag with `scripts/release.py`; every
+step refuses to run unless `HEAD` is that tag:
 
-The Go module lives in `sdk/`, so the workflow publishes `sdk/vVERSION` pointing
-to a committed generated SDK revision descended from the root release tag.
+```bash
+make build VERSION="$VERSION"
+python3 scripts/release.py prepare "$VERSION"           # stamp SDK versions
+python3 scripts/release.py archives "$VERSION"          # cross-compile into dist/provider
+python3 scripts/release.py publish-sdk "$VERSION"       # sdk/vVERSION Go module tag
+python3 scripts/release.py publish-provider "$VERSION"  # GitHub release assets (gh); publishes the release
+```
+
+The archives cover Linux, macOS, and Windows on amd64 and arm64 and use Pulumi's
+`pulumi-resource-busbar-vVERSION-OS-ARCH.tar.gz` naming, with a `SHA256SUMS`
+file. The Windows archive contains the `.exe` binary.
+
+The Go module lives in `sdk/`, so `publish-sdk` pushes `sdk/vVERSION` pointing
+to a commit of the generated SDK descended from the root release tag.
 The root tag is never moved. Matching SDK tags and provider assets can be reused
 on retries; conflicting existing tags or assets fail without replacement.
 A v2 release requires migrating `sdk/go.mod` and imports to a `/v2` module path
-before extending the release version check. Prereleases are not published by this
-workflow. npm and PyPI publication require `NPM_TOKEN` and `PYPI_API_TOKEN`.
+before extending the release version check. Prereleases are not published.
+The npm and PyPI packages are built and published separately from the same
+tag checkout after `publish-sdk`. They package whatever is in `sdk/nodejs` and
+`sdk/python`, including ignored files, so check `git status --ignored sdk` first
+and publish only the files built for this version:
+
+```bash
+(cd sdk/nodejs && npm install && npm pack && npm publish "./getbusbar-pulumi-busbar-$VERSION.tgz" --access public)
+(cd sdk/python && rm -rf dist build pulumi_busbar.egg-info && python -m build && twine upload dist/*)
+```
 
 ## Differences from 1.5.5
 

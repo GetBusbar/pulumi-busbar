@@ -191,3 +191,29 @@ func TestHookConstructorsPreserveOptionBackingArray(t *testing.T) {
 		t.Fatal(err)
 	}
 }
+
+func TestVirtualKeyConstructorsPreserveOptionBackingArray(t *testing.T) {
+	err := pulumi.RunErr(func(ctx *pulumi.Context) error {
+		options := make([]pulumi.ResourceOption, 1, 4)
+		options[0] = pulumi.Protect(true)
+		args := &busbar.VirtualKeyArgs{Name: pulumi.StringPtr("shared-key")}
+		original := *args
+		for i := 0; i < 2; i++ {
+			if _, err := busbar.NewVirtualKey(ctx, fmt.Sprintf("key-options-%d", i), args, options...); err != nil {
+				return err
+			}
+		}
+		if !reflect.DeepEqual(*args, original) {
+			return fmt.Errorf("VirtualKey constructor mutated caller-owned arguments")
+		}
+		for i, option := range options[len(options):cap(options)] {
+			if option != nil {
+				return fmt.Errorf("VirtualKey constructor mutated caller option backing array at %d", len(options)+i)
+			}
+		}
+		return nil
+	}, pulumi.WithMocks("project", "stack", argumentMocks{}))
+	if err != nil {
+		t.Fatal(err)
+	}
+}
