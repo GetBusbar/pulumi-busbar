@@ -21,12 +21,12 @@ class HookArgs:
     def __init__(__self__, *,
                  kind: pulumi.Input[_builtins.str],
                  module: pulumi.Input[_builtins.str],
-                 at: pulumi.Input[Optional[_builtins.str]] = None,
                  default: pulumi.Input[Optional[_builtins.bool]] = None,
                  global_: pulumi.Input[Optional[_builtins.bool]] = None,
                  name: pulumi.Input[Optional[_builtins.str]] = None,
                  on_empty: pulumi.Input[Optional[_builtins.str]] = None,
                  on_error: pulumi.Input[Optional[_builtins.str]] = None,
+                 phase: pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  priority: pulumi.Input[Optional[_builtins.int]] = None,
                  prompt: pulumi.Input[Optional[_builtins.str]] = None,
                  settings: pulumi.Input[Optional[_builtins.str]] = None,
@@ -39,12 +39,12 @@ class HookArgs:
 
         :param pulumi.Input[_builtins.str] kind: Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook.
         :param pulumi.Input[_builtins.str] module: Signed hook plugin name or alias installed on the gateway.
-        :param pulumi.Input[_builtins.str] at: Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
-        :param pulumi.Input[_builtins.bool] default: Whether this hook is the default for its stage. Write-only (not echoed by reads).
+        :param pulumi.Input[_builtins.bool] default: Whether this hook is the default for its stage. Defaults to false.
         :param pulumi.Input[_builtins.bool] global_: Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
         :param pulumi.Input[_builtins.str] name: Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
-        :param pulumi.Input[_builtins.str] on_empty: Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
+        :param pulumi.Input[_builtins.str] on_empty: Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.
         :param pulumi.Input[_builtins.str] on_error: Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
+        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] phase: Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.
         :param pulumi.Input[_builtins.int] priority: Ordering priority within a stage. Defaults to 0.
         :param pulumi.Input[_builtins.str] prompt: Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
         :param pulumi.Input[_builtins.str] settings: Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
@@ -55,8 +55,6 @@ class HookArgs:
         """
         pulumi.set(__self__, "kind", kind)
         pulumi.set(__self__, "module", module)
-        if at is not None:
-            pulumi.set(__self__, "at", at)
         if default is not None:
             pulumi.set(__self__, "default", default)
         if global_ is not None:
@@ -67,6 +65,8 @@ class HookArgs:
             pulumi.set(__self__, "on_empty", on_empty)
         if on_error is not None:
             pulumi.set(__self__, "on_error", on_error)
+        if phase is not None:
+            pulumi.set(__self__, "phase", phase)
         if priority is not None:
             pulumi.set(__self__, "priority", priority)
         if prompt is not None:
@@ -114,21 +114,9 @@ class HookArgs:
 
     @_builtins.property
     @pulumi.getter
-    def at(self) -> pulumi.Input[Optional[_builtins.str]]:
-        """
-        Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
-        """
-        return pulumi.get(self, "at")
-
-    @at.setter
-    def at(self, value: pulumi.Input[Optional[_builtins.str]]):
-        pulumi.set(self, "at", value)
-
-    @_builtins.property
-    @pulumi.getter
     def default(self) -> pulumi.Input[Optional[_builtins.bool]]:
         """
-        Whether this hook is the default for its stage. Write-only (not echoed by reads).
+        Whether this hook is the default for its stage. Defaults to false.
         """
         return pulumi.get(self, "default")
 
@@ -164,7 +152,7 @@ class HookArgs:
     @pulumi.getter(name="onEmpty")
     def on_empty(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
-        Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
+        Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.
         """
         return pulumi.get(self, "on_empty")
 
@@ -183,6 +171,18 @@ class HookArgs:
     @on_error.setter
     def on_error(self, value: pulumi.Input[Optional[_builtins.str]]):
         pulumi.set(self, "on_error", value)
+
+    @_builtins.property
+    @pulumi.getter
+    def phase(self) -> pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]]:
+        """
+        Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.
+        """
+        return pulumi.get(self, "phase")
+
+    @phase.setter
+    def phase(self, value: pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]]):
+        pulumi.set(self, "phase", value)
 
     @_builtins.property
     @pulumi.getter
@@ -274,7 +274,6 @@ class HookArgs:
 @pulumi.input_type
 class _HookState:
     def __init__(__self__, *,
-                 at: pulumi.Input[Optional[_builtins.str]] = None,
                  default: pulumi.Input[Optional[_builtins.bool]] = None,
                  global_: pulumi.Input[Optional[_builtins.bool]] = None,
                  kind: pulumi.Input[Optional[_builtins.str]] = None,
@@ -282,6 +281,7 @@ class _HookState:
                  name: pulumi.Input[Optional[_builtins.str]] = None,
                  on_empty: pulumi.Input[Optional[_builtins.str]] = None,
                  on_error: pulumi.Input[Optional[_builtins.str]] = None,
+                 phase: pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  priority: pulumi.Input[Optional[_builtins.int]] = None,
                  prompt: pulumi.Input[Optional[_builtins.str]] = None,
                  settings: pulumi.Input[Optional[_builtins.str]] = None,
@@ -292,14 +292,14 @@ class _HookState:
         """
         Input properties used for looking up and filtering Hook resources.
 
-        :param pulumi.Input[_builtins.str] at: Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
-        :param pulumi.Input[_builtins.bool] default: Whether this hook is the default for its stage. Write-only (not echoed by reads).
+        :param pulumi.Input[_builtins.bool] default: Whether this hook is the default for its stage. Defaults to false.
         :param pulumi.Input[_builtins.bool] global_: Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
         :param pulumi.Input[_builtins.str] kind: Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook.
         :param pulumi.Input[_builtins.str] module: Signed hook plugin name or alias installed on the gateway.
         :param pulumi.Input[_builtins.str] name: Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
-        :param pulumi.Input[_builtins.str] on_empty: Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
+        :param pulumi.Input[_builtins.str] on_empty: Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.
         :param pulumi.Input[_builtins.str] on_error: Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
+        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] phase: Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.
         :param pulumi.Input[_builtins.int] priority: Ordering priority within a stage. Defaults to 0.
         :param pulumi.Input[_builtins.str] prompt: Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
         :param pulumi.Input[_builtins.str] settings: Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
@@ -308,8 +308,6 @@ class _HookState:
         :param pulumi.Input[_builtins.str] user: Caller-identity access grant: no or ro. Defaults to no. Immutable grant; changing it replaces the hook.
         :param pulumi.Input[_builtins.str] webhook: Unsupported since busbar 1.5; use module and plugin settings.
         """
-        if at is not None:
-            pulumi.set(__self__, "at", at)
         if default is not None:
             pulumi.set(__self__, "default", default)
         if global_ is not None:
@@ -324,6 +322,8 @@ class _HookState:
             pulumi.set(__self__, "on_empty", on_empty)
         if on_error is not None:
             pulumi.set(__self__, "on_error", on_error)
+        if phase is not None:
+            pulumi.set(__self__, "phase", phase)
         if priority is not None:
             pulumi.set(__self__, "priority", priority)
         if prompt is not None:
@@ -347,21 +347,9 @@ class _HookState:
 
     @_builtins.property
     @pulumi.getter
-    def at(self) -> pulumi.Input[Optional[_builtins.str]]:
-        """
-        Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
-        """
-        return pulumi.get(self, "at")
-
-    @at.setter
-    def at(self, value: pulumi.Input[Optional[_builtins.str]]):
-        pulumi.set(self, "at", value)
-
-    @_builtins.property
-    @pulumi.getter
     def default(self) -> pulumi.Input[Optional[_builtins.bool]]:
         """
-        Whether this hook is the default for its stage. Write-only (not echoed by reads).
+        Whether this hook is the default for its stage. Defaults to false.
         """
         return pulumi.get(self, "default")
 
@@ -421,7 +409,7 @@ class _HookState:
     @pulumi.getter(name="onEmpty")
     def on_empty(self) -> pulumi.Input[Optional[_builtins.str]]:
         """
-        Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
+        Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.
         """
         return pulumi.get(self, "on_empty")
 
@@ -440,6 +428,18 @@ class _HookState:
     @on_error.setter
     def on_error(self, value: pulumi.Input[Optional[_builtins.str]]):
         pulumi.set(self, "on_error", value)
+
+    @_builtins.property
+    @pulumi.getter
+    def phase(self) -> pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]]:
+        """
+        Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.
+        """
+        return pulumi.get(self, "phase")
+
+    @phase.setter
+    def phase(self, value: pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]]):
+        pulumi.set(self, "phase", value)
 
     @_builtins.property
     @pulumi.getter
@@ -534,7 +534,6 @@ class Hook(pulumi.CustomResource):
     def __init__(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
-                 at: pulumi.Input[Optional[_builtins.str]] = None,
                  default: pulumi.Input[Optional[_builtins.bool]] = None,
                  global_: pulumi.Input[Optional[_builtins.bool]] = None,
                  kind: pulumi.Input[Optional[_builtins.str]] = None,
@@ -542,6 +541,7 @@ class Hook(pulumi.CustomResource):
                  name: pulumi.Input[Optional[_builtins.str]] = None,
                  on_empty: pulumi.Input[Optional[_builtins.str]] = None,
                  on_error: pulumi.Input[Optional[_builtins.str]] = None,
+                 phase: pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  priority: pulumi.Input[Optional[_builtins.int]] = None,
                  prompt: pulumi.Input[Optional[_builtins.str]] = None,
                  settings: pulumi.Input[Optional[_builtins.str]] = None,
@@ -587,14 +587,14 @@ class Hook(pulumi.CustomResource):
 
         :param str resource_name: The name of the resource.
         :param pulumi.ResourceOptions opts: Options for the resource.
-        :param pulumi.Input[_builtins.str] at: Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
-        :param pulumi.Input[_builtins.bool] default: Whether this hook is the default for its stage. Write-only (not echoed by reads).
+        :param pulumi.Input[_builtins.bool] default: Whether this hook is the default for its stage. Defaults to false.
         :param pulumi.Input[_builtins.bool] global_: Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
         :param pulumi.Input[_builtins.str] kind: Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook.
         :param pulumi.Input[_builtins.str] module: Signed hook plugin name or alias installed on the gateway.
         :param pulumi.Input[_builtins.str] name: Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
-        :param pulumi.Input[_builtins.str] on_empty: Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
+        :param pulumi.Input[_builtins.str] on_empty: Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.
         :param pulumi.Input[_builtins.str] on_error: Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
+        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] phase: Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.
         :param pulumi.Input[_builtins.int] priority: Ordering priority within a stage. Defaults to 0.
         :param pulumi.Input[_builtins.str] prompt: Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
         :param pulumi.Input[_builtins.str] settings: Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
@@ -659,7 +659,6 @@ class Hook(pulumi.CustomResource):
     def _internal_init(__self__,
                  resource_name: str,
                  opts: Optional[pulumi.ResourceOptions] = None,
-                 at: pulumi.Input[Optional[_builtins.str]] = None,
                  default: pulumi.Input[Optional[_builtins.bool]] = None,
                  global_: pulumi.Input[Optional[_builtins.bool]] = None,
                  kind: pulumi.Input[Optional[_builtins.str]] = None,
@@ -667,6 +666,7 @@ class Hook(pulumi.CustomResource):
                  name: pulumi.Input[Optional[_builtins.str]] = None,
                  on_empty: pulumi.Input[Optional[_builtins.str]] = None,
                  on_error: pulumi.Input[Optional[_builtins.str]] = None,
+                 phase: pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]] = None,
                  priority: pulumi.Input[Optional[_builtins.int]] = None,
                  prompt: pulumi.Input[Optional[_builtins.str]] = None,
                  settings: pulumi.Input[Optional[_builtins.str]] = None,
@@ -683,7 +683,6 @@ class Hook(pulumi.CustomResource):
                 raise TypeError('__props__ is only valid when passed in combination with a valid opts.id to get an existing resource')
             __props__ = HookArgs.__new__(HookArgs)
 
-            __props__.__dict__["at"] = at
             __props__.__dict__["default"] = default
             __props__.__dict__["global_"] = global_
             if kind is None and not opts.urn:
@@ -695,6 +694,7 @@ class Hook(pulumi.CustomResource):
             __props__.__dict__["name"] = name
             __props__.__dict__["on_empty"] = on_empty
             __props__.__dict__["on_error"] = on_error
+            __props__.__dict__["phase"] = phase
             __props__.__dict__["priority"] = priority
             __props__.__dict__["prompt"] = prompt
             __props__.__dict__["settings"] = None if settings is None else pulumi.Output.secret(settings)
@@ -714,7 +714,6 @@ class Hook(pulumi.CustomResource):
     def get(resource_name: str,
             id: pulumi.Input[str],
             opts: Optional[pulumi.ResourceOptions] = None,
-            at: pulumi.Input[Optional[_builtins.str]] = None,
             default: pulumi.Input[Optional[_builtins.bool]] = None,
             global_: pulumi.Input[Optional[_builtins.bool]] = None,
             kind: pulumi.Input[Optional[_builtins.str]] = None,
@@ -722,6 +721,7 @@ class Hook(pulumi.CustomResource):
             name: pulumi.Input[Optional[_builtins.str]] = None,
             on_empty: pulumi.Input[Optional[_builtins.str]] = None,
             on_error: pulumi.Input[Optional[_builtins.str]] = None,
+            phase: pulumi.Input[Optional[Sequence[pulumi.Input[_builtins.str]]]] = None,
             priority: pulumi.Input[Optional[_builtins.int]] = None,
             prompt: pulumi.Input[Optional[_builtins.str]] = None,
             settings: pulumi.Input[Optional[_builtins.str]] = None,
@@ -736,14 +736,14 @@ class Hook(pulumi.CustomResource):
         :param str resource_name: The unique name of the resulting resource.
         :param pulumi.Input[str] id: The unique provider ID of the resource to lookup.
         :param pulumi.ResourceOptions opts: Options for the resource.
-        :param pulumi.Input[_builtins.str] at: Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
-        :param pulumi.Input[_builtins.bool] default: Whether this hook is the default for its stage. Write-only (not echoed by reads).
+        :param pulumi.Input[_builtins.bool] default: Whether this hook is the default for its stage. Defaults to false.
         :param pulumi.Input[_builtins.bool] global_: Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
         :param pulumi.Input[_builtins.str] kind: Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook.
         :param pulumi.Input[_builtins.str] module: Signed hook plugin name or alias installed on the gateway.
         :param pulumi.Input[_builtins.str] name: Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
-        :param pulumi.Input[_builtins.str] on_empty: Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
+        :param pulumi.Input[_builtins.str] on_empty: Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.
         :param pulumi.Input[_builtins.str] on_error: Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
+        :param pulumi.Input[Sequence[pulumi.Input[_builtins.str]]] phase: Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.
         :param pulumi.Input[_builtins.int] priority: Ordering priority within a stage. Defaults to 0.
         :param pulumi.Input[_builtins.str] prompt: Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
         :param pulumi.Input[_builtins.str] settings: Opaque per-hook settings as a JSON object string (<= 64KiB, <= 256 keys). Defaults to {}.
@@ -756,7 +756,6 @@ class Hook(pulumi.CustomResource):
 
         __props__ = _HookState.__new__(_HookState)
 
-        __props__.__dict__["at"] = at
         __props__.__dict__["default"] = default
         __props__.__dict__["global_"] = global_
         __props__.__dict__["kind"] = kind
@@ -764,6 +763,7 @@ class Hook(pulumi.CustomResource):
         __props__.__dict__["name"] = name
         __props__.__dict__["on_empty"] = on_empty
         __props__.__dict__["on_error"] = on_error
+        __props__.__dict__["phase"] = phase
         __props__.__dict__["priority"] = priority
         __props__.__dict__["prompt"] = prompt
         __props__.__dict__["settings"] = settings
@@ -775,17 +775,9 @@ class Hook(pulumi.CustomResource):
 
     @_builtins.property
     @pulumi.getter
-    def at(self) -> pulumi.Output[Optional[_builtins.str]]:
+    def default(self) -> pulumi.Output[_builtins.bool]:
         """
-        Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
-        """
-        return pulumi.get(self, "at")
-
-    @_builtins.property
-    @pulumi.getter
-    def default(self) -> pulumi.Output[Optional[_builtins.bool]]:
-        """
-        Whether this hook is the default for its stage. Write-only (not echoed by reads).
+        Whether this hook is the default for its stage. Defaults to false.
         """
         return pulumi.get(self, "default")
 
@@ -823,9 +815,9 @@ class Hook(pulumi.CustomResource):
 
     @_builtins.property
     @pulumi.getter(name="onEmpty")
-    def on_empty(self) -> pulumi.Output[Optional[_builtins.str]]:
+    def on_empty(self) -> pulumi.Output[_builtins.str]:
         """
-        Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
+        Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.
         """
         return pulumi.get(self, "on_empty")
 
@@ -836,6 +828,14 @@ class Hook(pulumi.CustomResource):
         Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
         """
         return pulumi.get(self, "on_error")
+
+    @_builtins.property
+    @pulumi.getter
+    def phase(self) -> pulumi.Output[Sequence[_builtins.str]]:
+        """
+        Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.
+        """
+        return pulumi.get(self, "phase")
 
     @_builtins.property
     @pulumi.getter

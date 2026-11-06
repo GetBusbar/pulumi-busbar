@@ -67,13 +67,9 @@ export class Hook extends pulumi.CustomResource {
     }
 
     /**
-     * Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
+     * Whether this hook is the default for its stage. Defaults to false.
      */
-    declare public readonly at: pulumi.Output<string | undefined>;
-    /**
-     * Whether this hook is the default for its stage. Write-only (not echoed by reads).
-     */
-    declare public readonly default: pulumi.Output<boolean | undefined>;
+    declare public readonly default: pulumi.Output<boolean>;
     /**
      * Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
      */
@@ -91,13 +87,17 @@ export class Hook extends pulumi.CustomResource {
      */
     declare public readonly name: pulumi.Output<string>;
     /**
-     * Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
+     * Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.
      */
-    declare public readonly onEmpty: pulumi.Output<string | undefined>;
+    declare public readonly onEmpty: pulumi.Output<string>;
     /**
      * Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
      */
     declare public readonly onError: pulumi.Output<string>;
+    /**
+     * Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.
+     */
+    declare public readonly phase: pulumi.Output<string[]>;
     /**
      * Ordering priority within a stage. Defaults to 0.
      */
@@ -144,7 +144,6 @@ export class Hook extends pulumi.CustomResource {
         opts = opts || {};
         if (opts.id) {
             const state = argsOrState as HookState | undefined;
-            resourceInputs["at"] = state?.at;
             resourceInputs["default"] = state?.default;
             resourceInputs["global"] = state?.global;
             resourceInputs["kind"] = state?.kind;
@@ -152,6 +151,7 @@ export class Hook extends pulumi.CustomResource {
             resourceInputs["name"] = state?.name;
             resourceInputs["onEmpty"] = state?.onEmpty;
             resourceInputs["onError"] = state?.onError;
+            resourceInputs["phase"] = state?.phase;
             resourceInputs["priority"] = state?.priority;
             resourceInputs["prompt"] = state?.prompt;
             resourceInputs["settings"] = state?.settings;
@@ -167,7 +167,6 @@ export class Hook extends pulumi.CustomResource {
             if (args?.module === undefined && !opts.urn) {
                 throw new Error("Missing required property 'module'");
             }
-            resourceInputs["at"] = args?.at;
             resourceInputs["default"] = args?.default;
             resourceInputs["global"] = args?.global;
             resourceInputs["kind"] = args?.kind;
@@ -175,6 +174,7 @@ export class Hook extends pulumi.CustomResource {
             resourceInputs["name"] = args?.name;
             resourceInputs["onEmpty"] = args?.onEmpty;
             resourceInputs["onError"] = args?.onError;
+            resourceInputs["phase"] = args?.phase;
             resourceInputs["priority"] = args?.priority;
             resourceInputs["prompt"] = args?.prompt;
             resourceInputs["settings"] = args?.settings ? pulumi.secret(args.settings) : undefined;
@@ -195,11 +195,7 @@ export class Hook extends pulumi.CustomResource {
  */
 export interface HookState {
     /**
-     * Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
-     */
-    at?: pulumi.Input<string | undefined>;
-    /**
-     * Whether this hook is the default for its stage. Write-only (not echoed by reads).
+     * Whether this hook is the default for its stage. Defaults to false.
      */
     default?: pulumi.Input<boolean | undefined>;
     /**
@@ -219,13 +215,17 @@ export interface HookState {
      */
     name?: pulumi.Input<string | undefined>;
     /**
-     * Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
+     * Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.
      */
     onEmpty?: pulumi.Input<string | undefined>;
     /**
      * Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
      */
     onError?: pulumi.Input<string | undefined>;
+    /**
+     * Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.
+     */
+    phase?: pulumi.Input<pulumi.Input<string>[] | undefined>;
     /**
      * Ordering priority within a stage. Defaults to 0.
      */
@@ -265,11 +265,7 @@ export interface HookState {
  */
 export interface HookArgs {
     /**
-     * Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
-     */
-    at?: pulumi.Input<string | undefined>;
-    /**
-     * Whether this hook is the default for its stage. Write-only (not echoed by reads).
+     * Whether this hook is the default for its stage. Defaults to false.
      */
     default?: pulumi.Input<boolean | undefined>;
     /**
@@ -289,13 +285,17 @@ export interface HookArgs {
      */
     name?: pulumi.Input<string | undefined>;
     /**
-     * Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
+     * Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.
      */
     onEmpty?: pulumi.Input<string | undefined>;
     /**
      * Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
      */
     onError?: pulumi.Input<string | undefined>;
+    /**
+     * Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.
+     */
+    phase?: pulumi.Input<pulumi.Input<string>[] | undefined>;
     /**
      * Ordering priority within a stage. Defaults to 0.
      */

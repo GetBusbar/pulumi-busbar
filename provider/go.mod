@@ -24,7 +24,7 @@ require (
 	cloud.google.com/go/monitoring v1.24.3 // indirect
 	cloud.google.com/go/storage v1.61.3 // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
-	github.com/GetBusbar/terraform-provider-busbar v0.1.2-0.20261105184446-a58bfdbfa588 // indirect
+	github.com/GetBusbar/terraform-provider-busbar v0.1.2-0.20261106000114-2bf37cc3e312 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.32.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.55.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.55.0 // indirect

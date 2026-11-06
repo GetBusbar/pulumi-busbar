@@ -208,13 +208,9 @@
         "busbar:index/hook:Hook": {
             "description": "A routing hook backed by an installed signed plugin (POST/GET/PUT/DELETE /api/v1/admin/hooks). The grant fields kind, prompt, and user are immutable; changing them replaces the hook. Settings are sensitive and write-only on current gateways; import cannot recover them.\n\n## Example Usage\n\n\u003c!--Start PulumiCodeChooser --\u003e\n```typescript\nimport * as pulumi from \"@pulumi/pulumi\";\nimport * as busbar from \"@getbusbar/pulumi-busbar\";\n\n// The module must already be installed as a signed hook plugin on the gateway.\nconst ranker = new busbar.Hook(\"ranker\", {\n    name: \"quality-ranker\",\n    kind: \"gate\",\n    module: \"my-installed-ranker\",\n    prompt: \"ro\",\n    timeoutMs: 100,\n    priority: 10,\n    onError: \"weighted\",\n    settings: JSON.stringify({\n        min_score: 0.6,\n    }),\n});\n```\n```python\nimport pulumi\nimport json\nimport pulumi_busbar as busbar\n\n# The module must already be installed as a signed hook plugin on the gateway.\nranker = busbar.Hook(\"ranker\",\n    name=\"quality-ranker\",\n    kind=\"gate\",\n    module=\"my-installed-ranker\",\n    prompt=\"ro\",\n    timeout_ms=100,\n    priority=10,\n    on_error=\"weighted\",\n    settings=json.dumps({\n        \"min_score\": 0.6,\n    }))\n```\n```csharp\nusing System.Collections.Generic;\nusing System.Linq;\nusing System.Text.Json;\nusing Pulumi;\nusing Busbar = Pulumi.Busbar;\n\nreturn await Deployment.RunAsync(() =\u003e \n{\n    // The module must already be installed as a signed hook plugin on the gateway.\n    var ranker = new Busbar.Hook(\"ranker\", new()\n    {\n        Name = \"quality-ranker\",\n        Kind = \"gate\",\n        Module = \"my-installed-ranker\",\n        Prompt = \"ro\",\n        TimeoutMs = 100,\n        Priority = 10,\n        OnError = \"weighted\",\n        Settings = JsonSerializer.Serialize(new Dictionary\u003cstring, object?\u003e\n        {\n            [\"min_score\"] = 0.6,\n        }),\n    });\n\n});\n```\n```go\npackage main\n\nimport (\n\t\"encoding/json\"\n\n\t\"github.com/getbusbar/pulumi-busbar/sdk/go/busbar\"\n\t\"github.com/pulumi/pulumi/sdk/v3/go/pulumi\"\n)\n\nfunc main() {\n\tpulumi.Run(func(ctx *pulumi.Context) error {\n\t\ttmpJSON0, err := json.Marshal(map[string]interface{}{\n\t\t\t\"min_score\": 0.6,\n\t\t})\n\t\tif err != nil {\n\t\t\treturn err\n\t\t}\n\t\tjson0 := string(tmpJSON0)\n\t\t// The module must already be installed as a signed hook plugin on the gateway.\n\t\t_, err = busbar.NewHook(ctx, \"ranker\", \u0026busbar.HookArgs{\n\t\t\tName:      pulumi.String(\"quality-ranker\"),\n\t\t\tKind:      pulumi.String(\"gate\"),\n\t\t\tModule:    pulumi.String(\"my-installed-ranker\"),\n\t\t\tPrompt:    pulumi.String(\"ro\"),\n\t\t\tTimeoutMs: pulumi.Int(100),\n\t\t\tPriority:  pulumi.Int(10),\n\t\t\tOnError:   pulumi.String(\"weighted\"),\n\t\t\tSettings:  pulumi.String(json0),\n\t\t})\n\t\tif err != nil {\n\t\t\treturn err\n\t\t}\n\t\treturn nil\n\t})\n}\n```\n```hcl\npulumi {\n  required_providers {\n    busbar = {\n      source = \"pulumi/busbar\"\n    }\n  }\n}\n\n# The module must already be installed as a signed hook plugin on the gateway.\nresource \"busbar_hook\" \"ranker\" {\n  name       = \"quality-ranker\"\n  kind       = \"gate\"\n  module     = \"my-installed-ranker\"\n  prompt     = \"ro\"\n  timeout_ms = 100\n  priority   = 10\n  on_error   = \"weighted\"\n  settings = jsonencode({\n    \"min_score\" = 0.6\n  })\n}\n```\n```java\npackage generated_program;\n\nimport com.pulumi.Context;\nimport com.pulumi.Pulumi;\nimport com.pulumi.core.Output;\nimport com.pulumi.busbar.Hook;\nimport com.pulumi.busbar.HookArgs;\nimport static com.pulumi.codegen.internal.Serialization.*;\nimport java.util.ArrayList;\nimport java.util.Arrays;\nimport java.util.Map;\nimport java.io.File;\nimport java.nio.file.Files;\nimport java.nio.file.Paths;\n\npublic class App {\n    public static void main(String[] args) {\n        Pulumi.run(App::stack);\n    }\n\n    public static void stack(Context ctx) {\n        // The module must already be installed as a signed hook plugin on the gateway.\n        var ranker = new Hook(\"ranker\", HookArgs.builder()\n            .name(\"quality-ranker\")\n            .kind(\"gate\")\n            .module(\"my-installed-ranker\")\n            .prompt(\"ro\")\n            .timeoutMs(100)\n            .priority(10)\n            .onError(\"weighted\")\n            .settings(serializeJson(\n                jsonObject(\n                    jsonProperty(\"min_score\", 0.6)\n                )))\n            .build());\n\n    }\n}\n```\n```yaml\nresources:\n  # The module must already be installed as a signed hook plugin on the gateway.\n  ranker:\n    type: busbar:Hook\n    properties:\n      name: quality-ranker\n      kind: gate\n      module: my-installed-ranker\n      prompt: ro\n      timeoutMs: 100\n      priority: 10\n      onError: weighted\n      settings:\n        fn::toJSON:\n          min_score: 0.6\n```\n\u003c!--End PulumiCodeChooser --\u003e\n\n## Import\n\nThe `pulumi import` command can be used, for example:\n\nHooks are imported by name.\n\n```sh\n$ pulumi import busbar:index/hook:Hook ranker quality-ranker\n```\n\n",
             "properties": {
-                "at": {
-                    "type": "string",
-                    "description": "Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.\n"
-                },
                 "default": {
                     "type": "boolean",
-                    "description": "Whether this hook is the default for its stage. Write-only (not echoed by reads).\n"
+                    "description": "Whether this hook is the default for its stage. Defaults to false.\n"
                 },
                 "global": {
                     "type": "boolean",
@@ -234,11 +230,18 @@
                 },
                 "onEmpty": {
                     "type": "string",
-                    "description": "Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).\n"
+                    "description": "Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.\n"
                 },
                 "onError": {
                     "type": "string",
                     "description": "Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.\n"
+                },
+                "phase": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.\n"
                 },
                 "priority": {
                     "type": "integer",
@@ -273,11 +276,14 @@
                 }
             },
             "required": [
+                "default",
                 "global",
                 "kind",
                 "module",
                 "name",
+                "onEmpty",
                 "onError",
+                "phase",
                 "priority",
                 "prompt",
                 "settings",
@@ -285,13 +291,9 @@
                 "user"
             ],
             "inputProperties": {
-                "at": {
-                    "type": "string",
-                    "description": "Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.\n"
-                },
                 "default": {
                     "type": "boolean",
-                    "description": "Whether this hook is the default for its stage. Write-only (not echoed by reads).\n"
+                    "description": "Whether this hook is the default for its stage. Defaults to false.\n"
                 },
                 "global": {
                     "type": "boolean",
@@ -311,11 +313,18 @@
                 },
                 "onEmpty": {
                     "type": "string",
-                    "description": "Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).\n"
+                    "description": "Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.\n"
                 },
                 "onError": {
                     "type": "string",
                     "description": "Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.\n"
+                },
+                "phase": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "description": "Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.\n"
                 },
                 "priority": {
                     "type": "integer",
@@ -356,13 +365,9 @@
             "stateInputs": {
                 "description": "Input properties used for looking up and filtering Hook resources.\n",
                 "properties": {
-                    "at": {
-                        "type": "string",
-                        "description": "Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.\n"
-                    },
                     "default": {
                         "type": "boolean",
-                        "description": "Whether this hook is the default for its stage. Write-only (not echoed by reads).\n"
+                        "description": "Whether this hook is the default for its stage. Defaults to false.\n"
                     },
                     "global": {
                         "type": "boolean",
@@ -382,11 +387,18 @@
                     },
                     "onEmpty": {
                         "type": "string",
-                        "description": "Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).\n"
+                        "description": "Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.\n"
                     },
                     "onError": {
                         "type": "string",
                         "description": "Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.\n"
+                    },
+                    "phase": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.\n"
                     },
                     "priority": {
                         "type": "integer",

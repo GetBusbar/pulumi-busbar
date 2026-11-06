@@ -69,10 +69,8 @@ import (
 type Hook struct {
 	pulumi.CustomResourceState
 
-	// Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
-	At pulumi.StringPtrOutput `pulumi:"at"`
-	// Whether this hook is the default for its stage. Write-only (not echoed by reads).
-	Default pulumi.BoolPtrOutput `pulumi:"default"`
+	// Whether this hook is the default for its stage. Defaults to false.
+	Default pulumi.BoolOutput `pulumi:"default"`
 	// Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
 	Global pulumi.BoolOutput `pulumi:"global"`
 	// Transport contract: tap (fire-and-forget, non-blocking) or gate (blocking, may rewrite/reject). Immutable grant; changing it replaces the hook.
@@ -81,10 +79,12 @@ type Hook struct {
 	Module pulumi.StringOutput `pulumi:"module"`
 	// Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
 	Name pulumi.StringOutput `pulumi:"name"`
-	// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
-	OnEmpty pulumi.StringPtrOutput `pulumi:"onEmpty"`
+	// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.
+	OnEmpty pulumi.StringOutput `pulumi:"onEmpty"`
 	// Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
 	OnError pulumi.StringOutput `pulumi:"onError"`
+	// Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.
+	Phase pulumi.StringArrayOutput `pulumi:"phase"`
 	// Ordering priority within a stage. Defaults to 0.
 	Priority pulumi.IntOutput `pulumi:"priority"`
 	// Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
@@ -152,9 +152,7 @@ func GetHook(ctx *pulumi.Context,
 
 // Input properties used for looking up and filtering Hook resources.
 type hookState struct {
-	// Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
-	At *string `pulumi:"at"`
-	// Whether this hook is the default for its stage. Write-only (not echoed by reads).
+	// Whether this hook is the default for its stage. Defaults to false.
 	Default *bool `pulumi:"default"`
 	// Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
 	Global *bool `pulumi:"global"`
@@ -164,10 +162,12 @@ type hookState struct {
 	Module *string `pulumi:"module"`
 	// Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
 	Name *string `pulumi:"name"`
-	// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
+	// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.
 	OnEmpty *string `pulumi:"onEmpty"`
 	// Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
 	OnError *string `pulumi:"onError"`
+	// Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.
+	Phase []string `pulumi:"phase"`
 	// Ordering priority within a stage. Defaults to 0.
 	Priority *int `pulumi:"priority"`
 	// Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
@@ -189,9 +189,7 @@ type hookState struct {
 }
 
 type HookState struct {
-	// Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
-	At pulumi.StringPtrInput
-	// Whether this hook is the default for its stage. Write-only (not echoed by reads).
+	// Whether this hook is the default for its stage. Defaults to false.
 	Default pulumi.BoolPtrInput
 	// Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
 	Global pulumi.BoolPtrInput
@@ -201,10 +199,12 @@ type HookState struct {
 	Module pulumi.StringPtrInput
 	// Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
 	Name pulumi.StringPtrInput
-	// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
+	// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.
 	OnEmpty pulumi.StringPtrInput
 	// Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
 	OnError pulumi.StringPtrInput
+	// Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.
+	Phase pulumi.StringArrayInput
 	// Ordering priority within a stage. Defaults to 0.
 	Priority pulumi.IntPtrInput
 	// Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
@@ -230,9 +230,7 @@ func (HookState) ElementType() reflect.Type {
 }
 
 type hookArgs struct {
-	// Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
-	At *string `pulumi:"at"`
-	// Whether this hook is the default for its stage. Write-only (not echoed by reads).
+	// Whether this hook is the default for its stage. Defaults to false.
 	Default *bool `pulumi:"default"`
 	// Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
 	Global *bool `pulumi:"global"`
@@ -242,10 +240,12 @@ type hookArgs struct {
 	Module string `pulumi:"module"`
 	// Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
 	Name *string `pulumi:"name"`
-	// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
+	// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.
 	OnEmpty *string `pulumi:"onEmpty"`
 	// Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
 	OnError *string `pulumi:"onError"`
+	// Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.
+	Phase []string `pulumi:"phase"`
 	// Ordering priority within a stage. Defaults to 0.
 	Priority *int `pulumi:"priority"`
 	// Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
@@ -268,9 +268,7 @@ type hookArgs struct {
 
 // The set of arguments for constructing a Hook resource.
 type HookArgs struct {
-	// Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
-	At pulumi.StringPtrInput
-	// Whether this hook is the default for its stage. Write-only (not echoed by reads).
+	// Whether this hook is the default for its stage. Defaults to false.
 	Default pulumi.BoolPtrInput
 	// Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
 	Global pulumi.BoolPtrInput
@@ -280,10 +278,12 @@ type HookArgs struct {
 	Module pulumi.StringInput
 	// Unique hook name (<= 256 chars; not a reserved terminal name). Immutable; changing it replaces the hook.
 	Name pulumi.StringPtrInput
-	// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
+	// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.
 	OnEmpty pulumi.StringPtrInput
 	// Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
 	OnError pulumi.StringPtrInput
+	// Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.
+	Phase pulumi.StringArrayInput
 	// Ordering priority within a stage. Defaults to 0.
 	Priority pulumi.IntPtrInput
 	// Prompt-content access grant: no, ro, or rw. Defaults to no. Immutable grant; changing it replaces the hook. (rw is invalid on a tap.)
@@ -391,14 +391,9 @@ func (o HookOutput) ToHookOutputWithContext(ctx context.Context) HookOutput {
 	return o
 }
 
-// Legacy pipeline stage: request, candidate, routing, or response. Null lets busbar place it by kind.
-func (o HookOutput) At() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v *Hook) pulumi.StringPtrOutput { return v.At }).(pulumi.StringPtrOutput)
-}
-
-// Whether this hook is the default for its stage. Write-only (not echoed by reads).
-func (o HookOutput) Default() pulumi.BoolPtrOutput {
-	return o.ApplyT(func(v *Hook) pulumi.BoolPtrOutput { return v.Default }).(pulumi.BoolPtrOutput)
+// Whether this hook is the default for its stage. Defaults to false.
+func (o HookOutput) Default() pulumi.BoolOutput {
+	return o.ApplyT(func(v *Hook) pulumi.BoolOutput { return v.Default }).(pulumi.BoolOutput)
 }
 
 // Whether the hook applies globally (all pools). Defaults to false. May read back true if attached globally.
@@ -421,14 +416,19 @@ func (o HookOutput) Name() pulumi.StringOutput {
 	return o.ApplyT(func(v *Hook) pulumi.StringOutput { return v.Name }).(pulumi.StringOutput)
 }
 
-// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Write-only (not echoed by reads).
-func (o HookOutput) OnEmpty() pulumi.StringPtrOutput {
-	return o.ApplyT(func(v *Hook) pulumi.StringPtrOutput { return v.OnEmpty }).(pulumi.StringPtrOutput)
+// Fallback policy when the hook yields an empty ranking: weighted, reject, or first. Unset reads back null.
+func (o HookOutput) OnEmpty() pulumi.StringOutput {
+	return o.ApplyT(func(v *Hook) pulumi.StringOutput { return v.OnEmpty }).(pulumi.StringOutput)
 }
 
 // Behavior when the hook errors/times out: a terminal (weighted, reject, first, nothing) or another hook name. Defaults to nothing.
 func (o HookOutput) OnError() pulumi.StringOutput {
 	return o.ApplyT(func(v *Hook) pulumi.StringOutput { return v.OnError }).(pulumi.StringOutput)
+}
+
+// Configured pipeline stages: request, candidate, routing, or response. Omitted or empty selects all four core stages. Reads preserve the configured list.
+func (o HookOutput) Phase() pulumi.StringArrayOutput {
+	return o.ApplyT(func(v *Hook) pulumi.StringArrayOutput { return v.Phase }).(pulumi.StringArrayOutput)
 }
 
 // Ordering priority within a stage. Defaults to 0.

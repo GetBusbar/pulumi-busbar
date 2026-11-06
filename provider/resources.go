@@ -98,6 +98,10 @@ func Provider() tfbridge.ProviderInfo {
 			"busbar_hook": {
 				Tok:       tfbridge.MakeResource(mainPkg, mainMod, "Hook"),
 				ComputeID: tfbridge.DelegateIDField("name", mainPkg, "https://github.com/getbusbar/pulumi-busbar"),
+				Fields: map[string]*tfbridge.SchemaInfo{
+					// Keep the canonical field name instead of pluralizing this list.
+					"phase": {Name: "phase"},
+				},
 			},
 			"busbar_config": {
 				Tok: tfbridge.MakeResource(mainPkg, mainMod, "Config"),
