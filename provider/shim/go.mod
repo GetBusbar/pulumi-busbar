@@ -4,7 +4,7 @@
 // go.mod replace directive; it is never published.
 module github.com/GetBusbar/terraform-provider-busbar/shim
 
-go 1.26
+go 1.26.11
 
 require (
 	github.com/GetBusbar/terraform-provider-busbar v0.1.2-0.20261106000114-2bf37cc3e312
